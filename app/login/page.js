@@ -1,8 +1,7 @@
 "use client";
 import { useState } from "react";
-import { db } from "@/lib/firebaseConfig";
-import { collection, query, where, getDocs } from "firebase/firestore";
 import { useRouter } from "next/navigation";
+import Cookies from "js-cookie";
 import LoginInput from "@/components/LoginInput";
 import SignInButton from "@/components/SignInButton";
 
@@ -21,27 +20,28 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const usersRef = collection(db, "users");
-      const q = query(
-        usersRef,
-        where("userId", "==", formData.userId),
-        where("password", "==", formData.password)
-      );
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
 
-      const querySnapshot = await getDocs(q);
-
-      if (querySnapshot.empty) {
-        setError("Invalid user ID or password");
+      const data = await response.json();
+      if (!response.ok) {
+        setError(data.message);
+        setLoading(false);
         return;
       }
 
-      const userData = querySnapshot.docs[0].data();
+      Cookies.set("token", data.token, { secure: true, sameSite: "Strict" });
+      Cookies.set("role", data.role, { secure: true, sameSite: "Strict" });
 
-      localStorage.setItem("user", JSON.stringify(userData));
       router.push("/");
     } catch (err) {
       setError("An error occurred during login");
-      console.error(err);
+      console.error("Login error:", err);
     } finally {
       setLoading(false);
     }
