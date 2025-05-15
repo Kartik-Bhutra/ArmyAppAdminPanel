@@ -97,7 +97,7 @@ export default function BlockedPage() {
                     >
                       <th
                         scope="row"
-                        className="px-6 py-4 font-medium text-gray-900 font-semibold"
+                        className="px-6 py-4 text-gray-900 font-semibold"
                       >
                         {key + 1}
                       </th>

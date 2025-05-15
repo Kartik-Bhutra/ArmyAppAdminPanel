@@ -1,3 +1,3 @@
-export default function AdminLayout({ children }) {
-    return <>{children}</>;
+export default function AdminLayout() {
+  return (<></>);
 }

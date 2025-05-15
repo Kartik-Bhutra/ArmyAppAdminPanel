@@ -51,7 +51,7 @@ export default function ClientsPage() {
                         return (<tr key={key} className="odd:bg-gray even:bg-gray-50 border-b border-gray-200">
                             <th
                               scope="row"
-                              className="px-6 py-4 font-medium text-gray-900 font-semibold"
+                              className="px-6 py-4 text-gray-900 font-semibold"
                             >
                               {item.name}
                             </th>

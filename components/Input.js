@@ -1,7 +1,7 @@
 export default function Input({ label, value, setValue }) {
   return (
     <div className="max-w-sm my-4">
-      <label for="name" className="block mb-2 text-sm font-medium text-gray-700">
+      <label htmlFor="name" className="block mb-2 text-sm font-medium text-gray-700">
         {label}
       </label>
       <input
