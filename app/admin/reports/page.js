@@ -12,7 +12,14 @@ export default function Reports() {
   const total_pages = 20;
   const [currentPage, setCurrentPage] = useState(0);
   const [data, setData] = useState([]);
+  const [startingData, setStartingData] = useState([]);
   const [selectedRows, setSelectedRows] = useState(new Set());
+  const [showFilter, setShowFilter] = useState(false);
+  const [filters, setFilters] = useState({
+    number: "",
+    reportedBy: "",
+    sortByUpvotes: false,
+  });
 
   useEffect(() => {
     setData([]);
@@ -22,6 +29,7 @@ export default function Reports() {
     setTimeout(() => {
       setData(reports.slice(currentPage * 50, (currentPage + 1) * 50));
     }, [1000]);
+    setStartingData(reports.slice(currentPage * 50, (currentPage + 1) * 50));
   }, [currentPage]);
 
   const onBlock = (phone_no) => {};
@@ -37,6 +45,57 @@ export default function Reports() {
     setSelectedRows(newSelected);
   };
 
+  const handleFilterChange = (e) => {
+    const { name, value } = e.target;
+    setFilters((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+
+    let filteredData = [...startingData];
+
+    // Apply number filter
+    if (name === "number" && value) {
+      filteredData = filteredData.filter((item) =>
+        item.phone_no.startsWith(value)
+      );
+    }
+
+    // Apply reported by filter
+    if (name === "reportedBy" && value) {
+      filteredData = filteredData.filter((item) =>
+        item.by.some((reporter) => reporter.phone_no.startsWith(value))
+      );
+    }
+
+    setData(filteredData);
+  };
+
+  const handleSortToggle = () => {
+    setFilters((prev) => ({
+      ...prev,
+      sortByUpvotes: !prev.sortByUpvotes,
+    }));
+
+    setData((prev) => {
+      const sorted = [...prev].sort((a, b) =>
+        filters.sortByUpvotes
+          ? a.by.length - b.by.length
+          : b.by.length - a.by.length
+      );
+      return sorted;
+    });
+  };
+
+  const resetFilters = () => {
+    setFilters({
+      number: "",
+      reportedBy: "",
+      sortByUpvotes: false,
+    });
+    setData(startingData);
+  };
+
   return (
     <>
       <main className="p-6">
@@ -45,6 +104,76 @@ export default function Reports() {
             <h2 className="text-xl font-semibold">
               Reported Numbers (Page {currentPage + 1} of {total_pages})
             </h2>
+            <div className="relative">
+              <button
+                onClick={() => setShowFilter(!showFilter)}
+                className="px-4 py-2 bg-gray-100 rounded-md hover:bg-gray-200 flex items-center gap-2"
+              >
+                <span>Filter</span>
+                <span className="text-sm">{showFilter ? "▼" : "▶"}</span>
+              </button>
+
+              {showFilter && (
+                <div className="absolute right-0 mt-2 w-72 bg-white rounded-md shadow-lg p-4 z-10 border border-gray-200">
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Search Number
+                      </label>
+                      <input
+                        type="text"
+                        name="number"
+                        value={filters.number}
+                        onChange={handleFilterChange}
+                        className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        placeholder="Enter phone number"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Reported By Number
+                      </label>
+                      <input
+                        type="text"
+                        name="reportedBy"
+                        value={filters.reportedBy}
+                        onChange={handleFilterChange}
+                        className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        placeholder="Search reporter's number"
+                      />
+                    </div>
+
+                    <div className="flex items-center">
+                      <label className="flex items-center text-sm text-gray-700 gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={filters.sortByUpvotes}
+                          onChange={handleSortToggle}
+                          className="rounded text-blue-500 focus:ring-blue-500"
+                        />
+                        Sort by most reported
+                      </label>
+                    </div>
+
+                    <div className="flex justify-end gap-2 pt-2 border-t">
+                      <button
+                        onClick={resetFilters}
+                        className="px-3 py-1 text-sm text-gray-600 hover:text-gray-800"
+                      >
+                        Clear
+                      </button>
+                      <button
+                        onClick={() => setShowFilter(false)}
+                        className="px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600"
+                      >
+                        Apply
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
 
           <div className="relative overflow-x-auto">
@@ -127,7 +256,7 @@ export default function Reports() {
                     )}
                   </React.Fragment>
                 ))}
-                {data.length == 0 && (
+                {startingData.length == 0 && (
                   <tr className="odd:bg-gray even:bg-gray-50 border-b border-gray-200">
                     <td
                       className="px-6 py-4 display-flex items-center justify-center"
