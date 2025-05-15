@@ -2,7 +2,7 @@
 
 import { useState, useRef } from "react";
 
-export default function SeqInput({value,setValue}) {
+export default function SeqInput({ value, setValue }) {
   const inputRef = useRef(null);
 
   const handleKeyDown = (e) => {
@@ -23,8 +23,11 @@ export default function SeqInput({value,setValue}) {
   const display = (value + "X".repeat(15)).slice(0, 15);
 
   return (
-    <div className="max-w-md mx-auto mt-10">
-      <label htmlFor="maskedInput" className="block mb-2 text-sm font-medium text-gray-700">
+    <div className="max-w-md mx-auto ">
+      <label
+        htmlFor="maskedInput"
+        className="block mb-2 text-sm font-medium text-gray-700"
+      >
         Enter Sequence
       </label>
 
