@@ -38,3 +38,32 @@ body {
 .animate-fadeIn {
   animation: fadeIn 0.5s ease-out;
 }
+.hamburger{
+  display: none;
+}
+@media screen and (max-width: 800px) {
+  .sidebar_custom {
+    position: fixed;
+    z-index: 100;
+    left:-16rem;
+    transition: .3s ease;
+  }
+  .hamburger {
+    display: block;
+    position: absolute;
+    color: oklch(48.8% .243 264.376);
+    transition: .3s ease;
+    cursor: pointer;
+    font-size: 25px;
+    right: -40px;
+    top: 10px;
+  }
+  .sidebar_custom.open{
+    left: 0px;
+  }
+  .sidebar_custom.open .hamburger{
+    right: 20px;
+    color: white;
+    top: 20px;
+  }
+}
