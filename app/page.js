@@ -1,102 +1,70 @@
 "use client";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import Cookies from "js-cookie";
-import LoginInput from "@/components/LoginInput";
-import SignInButton from "@/components/SignInButton";
+import PasswordBtn from "@/components/PasswordBtn";
+import KeyIcon from "@/icons/Key";
 
 export default function LoginPage() {
-  const router = useRouter();
-  const [formData, setFormData] = useState({
-    userId: "",
-    password: "",
-  });
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError("");
-    setLoading(true);
-
-    try {
-      const response = await fetch("/api/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
-      });
-
-      const data = await response.json();
-      if (!response.ok) {
-        setError(data.message);
-        setLoading(false);
-        return;
-      }
-
-      Cookies.set("token", data.token, { secure: true, sameSite: "Strict" });
-      Cookies.set("role", data.role, { secure: true, sameSite: "Strict" });
-
-      router.push("/");
-    } catch (err) {
-      setError("An error occurred during login");
-      console.error("Login error:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
-  };
-
   return (
-    <div className="flex flex-col justify-center items-center w-full h-screen">
-      <h1 className="text-3xl md:text-4xl font-bold mb-8 text-gray-800 animate-fadeIn">
-        Welcome Back
-      </h1>
-      {error && <p className="text-red-500 mb-4">{error}</p>}
-      <form
-        onSubmit={handleSubmit}
-        className="w-full max-w-md px-6 py-8 bg-white rounded-lg shadow-lg transform transition-all duration-300 hover:shadow-xl"
-      >
-        <LoginInput
-          text="User ID"
-          type="text"
-          name="userId"
-          value={formData.userId}
-          onChange={handleChange}
-          required
-        />
-        <LoginInput
-          text="Password"
-          type="password"
-          name="password"
-          value={formData.password}
-          onChange={handleChange}
-          required
-        />
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center">
-            <input
-              type="checkbox"
-              className="w-4 h-4 text-blue-500 border-gray-300 rounded focus:ring-blue-500 transition-all duration-200"
-            />
-            <p className="ml-2 text-sm text-gray-600">Remember me</p>
+    <div className="min-h-screen w-full flex justify-center items-center bg-gradient-to-br from-gray-50 to-gray-100">
+      <div className="bg-white p-8 rounded-2xl shadow-xl w-[95%] max-w-[400px] transition-all duration-300 hover:shadow-2xl mx-4">
+        <div className="space-y-8">
+          <div className="text-center space-y-2">
+            <div className="flex justify-center mb-6">
+              <div className="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center">
+                <KeyIcon />
+              </div>
+            </div>
+            <h1 className="text-2xl font-bold text-gray-900">Welcome back!</h1>
+            <p className="text-gray-500">
+              Please enter your details to sign in
+            </p>
           </div>
-          <button
-            type="button"
-            className="text-sm text-blue-500 hover:text-blue-700 transition-all duration-200"
-          >
-            Forgot Password?
-          </button>
+
+          <form className="space-y-6">
+            <div className="space-y-5">
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-gray-700">
+                  User Id
+                </label>
+                <input
+                  type="text"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="Enter your user Id"
+                />
+              </div>
+              <PasswordBtn />
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <input
+                  type="checkbox"
+                  className="h-4 w-4 text-blue-600 rounded-lg border-gray-300 transition-all duration-200"
+                  id="remember-me"
+                />
+                <label
+                  htmlFor="remember-me"
+                  className="ml-2 text-sm text-gray-600"
+                >
+                  Remember me
+                </label>
+              </div>
+              <button
+                type="button"
+                className="text-sm text-blue-600 hover:text-blue-500 transition-colors duration-200"
+              >
+                Forgot password?
+              </button>
+            </div>
+
+            <button
+              type="submit"
+              className="w-full py-3 px-4 bg-blue-600 text-white rounded-xl font-medium transition-all duration-200 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transform hover:-translate-y-0.5"
+            >
+              Sign In
+            </button>
+          </form>
         </div>
-        <SignInButton loading={loading} />
-      </form>
+      </div>
     </div>
   );
 }
