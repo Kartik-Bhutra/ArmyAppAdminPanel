@@ -13,7 +13,6 @@ export async function getAuthUser() {
     const role = decoded.role;
     return { userId, role };
   } catch (err) {
-    console.error("Token verification failed:", err);
     return null;
   }
 }

@@ -1,7 +1,14 @@
 import LoginForm from "@/components/LoginForm";
 import KeyIcon from "@/icons/Key";
+import { getAuthUser } from "@/utils/getAuthUser";
+import { redirect } from "next/navigation";
 
-export default function LoginPage() {
+export default async function LoginPage() {
+  const user = await getAuthUser();
+  if (user) {
+    redirect("/");
+  }
+
   return (
     <div className="min-h-screen w-full flex justify-center items-center bg-gradient-to-br from-blue-50 via-gray-50 to-indigo-50">
       <div className="bg-white p-8 rounded-2xl shadow-xl w-[95%] max-w-[400px] transition-all duration-300 hover:shadow-2xl mx-4">
