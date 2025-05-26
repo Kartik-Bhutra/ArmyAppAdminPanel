@@ -29,6 +29,8 @@ export default function LoginForm() {
       });
 
       if (!res.ok) {
+        // const error = await res.json();
+        // console.log(error.message);
         return;
       }
       const data = await res.json();
