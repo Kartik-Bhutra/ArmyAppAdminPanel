@@ -1,5 +1,6 @@
 import { getAuthUser } from "@/utils/getAuthUser";
 import { redirect } from "next/navigation";
+import DashboardLayout from "@/components/DashboardLayout";
 
 export default async function HomePage() {
   let user;
@@ -13,15 +14,19 @@ export default async function HomePage() {
     redirect("/login");
   }
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
-      <div className="max-w-4xl mx-auto">
-        <div className="bg-white rounded-2xl shadow-lg p-6">
-          <h1 className="text-2xl font-bold text-gray-900">
-            Welcome Back, {user?.role ? "Owner" : "Administrator"}
-          </h1>
-          <p className="mt-2 text-gray-600">You are logged in as {user?.userId}</p>
+    <DashboardLayout>
+      <div className="min-h-screen bg-gray-50 p-8">
+        <div className="max-w-4xl mx-auto">
+          <div className="bg-white rounded-2xl shadow-lg p-6">
+            <h1 className="text-2xl font-bold text-gray-900">
+              Welcome Back, {user?.role ? "Owner" : "Administrator"}
+            </h1>
+            <p className="mt-2 text-gray-600">
+              You are logged in as {user?.userId}
+            </p>
+          </div>
         </div>
       </div>
-    </div>
+    </DashboardLayout>
   );
 }
