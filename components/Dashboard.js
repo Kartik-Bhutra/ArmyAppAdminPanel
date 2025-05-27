@@ -18,9 +18,15 @@ export default function Dashboard({ children, user }) {
       </div>
 
       <div className="flex h-[calc(100vh-4rem)]">
-        <Sidebar />
-        <main className="flex-1 p-4 md:p-6">
-          <div className="h-full">{children}</div>
+        <aside className="w-64 bg-white border-r border-gray-200 flex-shrink-0">
+          <Sidebar />
+        </aside>
+        <main className="flex-1">
+          <div className="h-full p-4 md:p-6 overflow-auto">
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+              <div className="p-6">{children}</div>
+            </div>
+          </div>
         </main>
       </div>
     </div>
