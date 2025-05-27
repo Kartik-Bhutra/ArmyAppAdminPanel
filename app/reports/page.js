@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 // DEMO Data Inport
 import reports from "./reports.json";
 import Loader from "@/components/Loader";
+import Dashboard from "@/components/Dashboard";
 
 export default function Reports() {
   const total_pages = 20;
@@ -97,7 +98,7 @@ export default function Reports() {
   };
 
   return (
-    <>
+    <Dashboard>
       <main className="p-6">
         <div className="bg-white bordered shadow p-4">
           <div className="flex justify-between items-center mb-4">
@@ -276,6 +277,6 @@ export default function Reports() {
           />
         </div>
       </main>
-    </>
+    </Dashboard>
   );
 }

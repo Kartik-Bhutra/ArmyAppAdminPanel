@@ -9,6 +9,7 @@ import Modal from "@/components/Modal";
 import Select from "@/components/Select";
 import SeqInput from "@/components/SeqInput";
 import Input from "@/components/Input";
+import Dashboard from "@/components/Dashboard";
 
 export default function BlockedPage() {
   const total_pages = 1;
@@ -25,8 +26,7 @@ export default function BlockedPage() {
   const onCreate = () => {};
   const onDelete = () => {};
   return (
-    <>
-      {/* Create Modal */}
+    <Dashboard>
       <Modal
         onConfirm={onCreate}
         open={openm1}
@@ -139,6 +139,6 @@ export default function BlockedPage() {
           />
         </div>
       </main>
-    </>
+    </Dashboard>
   );
 }
