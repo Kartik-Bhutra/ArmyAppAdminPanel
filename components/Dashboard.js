@@ -32,7 +32,7 @@ export default function Dashboard({ children, user }) {
 
         <main className="w-full md:ml-64 min-h-[calc(100vh-4rem)] p-4 md:p-6">
           <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-            <div className="p-6 overflow-x-auto">{children}</div>
+            <div className="overflow-x-auto">{children}</div>
           </div>
         </main>
       </div>
