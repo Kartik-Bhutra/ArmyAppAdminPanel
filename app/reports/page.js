@@ -1,16 +1,24 @@
-"use client";
-import React from "react";
 import Dashboard from "@/components/Dashboard";
 import Table from "@/components/reports.components/Table";
+import { getAuthUser } from "@/utils/getAuthUser";
+import { redirect } from "next/navigation";
 
-export default function Reports() {
+export default async function Reports() {
+  let user;
   
-
+    try {
+      user = await getAuthUser();
+      if (!user) {
+        redirect("/login");
+      }
+    } catch (err) {
+      redirect("/login");
+    }
   return (
-    <Dashboard>
+    <Dashboard user={user}>
       <main className="p-6">
         <div className="bg-white bordered">
-          <Table/>
+          <Table />
         </div>
       </main>
     </Dashboard>

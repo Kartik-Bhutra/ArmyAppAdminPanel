@@ -1,12 +1,23 @@
-"use client";
 import Table from "@/components/blocked.components/Table";
 import Dashboard from "@/components/Dashboard";
+import { getAuthUser } from "@/utils/getAuthUser";
+import { redirect } from "next/navigation";
 
-export default function BlockedPage() {
+export default async function BlockedPage() {
+  let user;
+  
+    try {
+      user = await getAuthUser();
+      if (!user) {
+        redirect("/login");
+      }
+    } catch (err) {
+      redirect("/login");
+    }
   return (
-    <Dashboard>
+    <Dashboard user={user}>
       <main className="p-6">
-        <Table/>
+        <Table />
       </main>
     </Dashboard>
   );

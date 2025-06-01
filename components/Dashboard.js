@@ -1,6 +1,6 @@
 "use client";
 import Sidebar from "./Sidebar";
-import MobileNav from "./MobileNav";
+import MobileNavigation from "./MobileNavigation";
 import { useState } from "react";
 
 export default function Dashboard({ children, user }) {
@@ -11,7 +11,7 @@ export default function Dashboard({ children, user }) {
       {/* Header */}
       <header className="fixed top-0 right-0 left-0 z-30 flex h-16 items-center justify-between bg-white/80 backdrop-blur-sm px-4 shadow-md md:px-6 border-b border-blue-100">
         <div className="flex items-center gap-4">
-          <MobileNav
+          <MobileNavigation
             isOpen={isMobileMenuOpen}
             setIsOpen={setIsMobileMenuOpen}
           />

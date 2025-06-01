@@ -1,17 +1,24 @@
-"use client";
-
-
 import Table from "@/components/clients.components/Table";
-// DEMO Data Inport
 import Dashboard from "@/components/Dashboard";
+import { getAuthUser } from "@/utils/getAuthUser";
+import { redirect } from "next/navigation";
 
-export default function ClientsPage() {
+export default async function ClientsPage() {
+  let user;
   
+    try {
+      user = await getAuthUser();
+      if (!user) {
+        redirect("/login");
+      }
+    } catch (err) {
+      redirect("/login");
+    }
   return (
-    <Dashboard>
+    <Dashboard user={user}>
       <main className="p-6">
         <div className="bg-white bordered ">
-          <Table/>
+          <Table />
         </div>
       </main>
     </Dashboard>
