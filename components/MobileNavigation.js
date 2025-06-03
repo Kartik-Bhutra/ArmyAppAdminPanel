@@ -54,9 +54,7 @@ export default function MobileNavigation({ isOpen, setIsOpen }) {
               </div>
 
               <div className="pt-4 border-t border-gray-200">
-                <button
-                  className="w-full flex items-center px-3 py-2.5 text-base font-medium text-red-600 hover:bg-red-50 rounded-xl transition-all duration-200"
-                >
+                <button className="w-full flex items-center px-3 py-2.5 text-base font-medium text-red-600 hover:bg-red-50 rounded-xl transition-all duration-200">
                   <Logout />
                   Logout
                 </button>

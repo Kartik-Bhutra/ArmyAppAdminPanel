@@ -4,96 +4,96 @@ import Filter from "./Filter";
 import Pagination from "@/components/Pagination";
 import React, { useEffect, useState } from "react";
 // DEMO Data Inport
-import reports from "./reports.json";
+import reports from "@/constants/reports.json";
 import Loader from "@/components/Loader";
 
 export default function Table() {
-    const total_pages = 20;
-const [currentPage, setCurrentPage] = useState(0);
-const [data, setData] = useState([]);
-const [startingData, setStartingData] = useState([]);
-const [selectedRows, setSelectedRows] = useState(new Set());
-const [showFilter, setShowFilter] = useState(false);
-const [filters, setFilters] = useState({
-  number: "",
-  reportedBy: "",
-  sortByUpvotes: false,
-});
-
-useEffect(() => {
-  setData([]);
-  setSelectedRows(new Set()); // Clear selected rows on page change
-  // For fetching delay
-  // remove this during connceting it with firebase
-  setTimeout(() => {
-    setData(reports.slice(currentPage * 50, (currentPage + 1) * 50));
-  }, [1000]);
-  setStartingData(reports.slice(currentPage * 50, (currentPage + 1) * 50));
-}, [currentPage]);
-
-const onBlock = (phone_no) => {};
-const onSafe = (phone_no) => {};
-
-const toggleRow = (index) => {
-  const newSelected = new Set(selectedRows);
-  if (newSelected.has(index)) {
-    newSelected.delete(index);
-  } else {
-    newSelected.add(index);
-  }
-  setSelectedRows(newSelected);
-};
-
-const handleFilterChange = (e) => {
-  const { name, value } = e.target;
-  setFilters((prev) => ({
-    ...prev,
-    [name]: value,
-  }));
-
-  let filteredData = [...startingData];
-
-  // Apply number filter
-  if (name === "number" && value) {
-    filteredData = filteredData.filter((item) =>
-      item.phone_no.startsWith(value)
-    );
-  }
-
-  // Apply reported by filter
-  if (name === "reportedBy" && value) {
-    filteredData = filteredData.filter((item) =>
-      item.by.some((reporter) => reporter.phone_no.startsWith(value))
-    );
-  }
-
-  setData(filteredData);
-};
-
-const handleSortToggle = () => {
-  setFilters((prev) => ({
-    ...prev,
-    sortByUpvotes: !prev.sortByUpvotes,
-  }));
-
-  setData((prev) => {
-    const sorted = [...prev].sort((a, b) =>
-      filters.sortByUpvotes
-        ? a.by.length - b.by.length
-        : b.by.length - a.by.length
-    );
-    return sorted;
-  });
-};
-
-const resetFilters = () => {
-  setFilters({
+  const total_pages = 20;
+  const [currentPage, setCurrentPage] = useState(0);
+  const [data, setData] = useState([]);
+  const [startingData, setStartingData] = useState([]);
+  const [selectedRows, setSelectedRows] = useState(new Set());
+  const [showFilter, setShowFilter] = useState(false);
+  const [filters, setFilters] = useState({
     number: "",
     reportedBy: "",
     sortByUpvotes: false,
   });
-  setData(startingData);
-};
+
+  useEffect(() => {
+    setData([]);
+    setSelectedRows(new Set()); // Clear selected rows on page change
+    // For fetching delay
+    // remove this during connceting it with firebase
+    setTimeout(() => {
+      setData(reports.slice(currentPage * 50, (currentPage + 1) * 50));
+    }, [1000]);
+    setStartingData(reports.slice(currentPage * 50, (currentPage + 1) * 50));
+  }, [currentPage]);
+
+  const onBlock = (phone_no) => {};
+  const onSafe = (phone_no) => {};
+
+  const toggleRow = (index) => {
+    const newSelected = new Set(selectedRows);
+    if (newSelected.has(index)) {
+      newSelected.delete(index);
+    } else {
+      newSelected.add(index);
+    }
+    setSelectedRows(newSelected);
+  };
+
+  const handleFilterChange = (e) => {
+    const { name, value } = e.target;
+    setFilters((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+
+    let filteredData = [...startingData];
+
+    // Apply number filter
+    if (name === "number" && value) {
+      filteredData = filteredData.filter((item) =>
+        item.phone_no.startsWith(value)
+      );
+    }
+
+    // Apply reported by filter
+    if (name === "reportedBy" && value) {
+      filteredData = filteredData.filter((item) =>
+        item.by.some((reporter) => reporter.phone_no.startsWith(value))
+      );
+    }
+
+    setData(filteredData);
+  };
+
+  const handleSortToggle = () => {
+    setFilters((prev) => ({
+      ...prev,
+      sortByUpvotes: !prev.sortByUpvotes,
+    }));
+
+    setData((prev) => {
+      const sorted = [...prev].sort((a, b) =>
+        filters.sortByUpvotes
+          ? a.by.length - b.by.length
+          : b.by.length - a.by.length
+      );
+      return sorted;
+    });
+  };
+
+  const resetFilters = () => {
+    setFilters({
+      number: "",
+      reportedBy: "",
+      sortByUpvotes: false,
+    });
+    setData(startingData);
+  };
   return (
     <>
       <div className="flex justify-between items-center mb-4">
