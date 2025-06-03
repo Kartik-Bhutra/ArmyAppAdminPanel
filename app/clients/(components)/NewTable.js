@@ -1,113 +1,22 @@
 "use client";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { decrypt } from "@/hooks/useDecrypt";
 import Header from "./Header";
+import clients from "@/constants/clients-demo-data.json";
 import Pagination from "@/components/Pagination";
 import Loader from "@/components/Loader";
-import { db } from "@/lib/firebaseConfig";
-import {
-  collection,
-  query,
-  limit,
-  getDocs,
-  orderBy,
-  startAfter,
-} from "firebase/firestore";
 
-function formatTimestamp(timestamp) {
-  if (!timestamp || !timestamp.toDate) return "N/A";
-
-  const date = timestamp.toDate();
-  return date.toLocaleString("en-IN", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: true,
-    timeZoneName: "short",
-  });
-}
-
-export default function Table({ showActions = true, isApproved = false }) {
+export default function Table({ showActions = true }) {
+  const total_pages = 20;
   const [currentPage, setCurrentPage] = useState(0);
   const [data, setData] = useState([]);
-  const [totalPages, setTotalPages] = useState(20);
-  const [loading, setLoading] = useState(true);
-  const [lastVisible, setLastVisible] = useState(null);
-  const [firstVisible, setFirstVisible] = useState(null);
-  const [pageSnapshots, setPageSnapshots] = useState({});
-  const itemsPerPage = 50;
-
-  const decryptData = (item) => {
-    try {
-      return {
-        ...item,
-        phoneNo: decrypt(item.phoneNo, item.iv),
-        UUID: decrypt(item.UUID, item.iv),
-      };
-    } catch (error) {
-      console.error("Decryption error:", error);
-      return item;
-    }
-  };
-
   useEffect(() => {
-    async function fetchData() {
-      try {
-        setLoading(true);
-        const clientsRef = collection(db, "clients");
+    setData([]);
 
-        const snapshot = await getDocs(clientsRef);
-        setTotalPages(Math.ceil(snapshot.size / itemsPerPage));
-
-        let querySnapshot;
-        if (pageSnapshots[currentPage]) {
-          querySnapshot = pageSnapshots[currentPage];
-        } else {
-          if (currentPage === 0) {
-            const firstPageQuery = query(
-              clientsRef,
-              orderBy("createdAt", "desc"),
-              limit(itemsPerPage)
-            );
-            querySnapshot = await getDocs(firstPageQuery);
-          } else {
-            const pageQuery = query(
-              clientsRef,
-              orderBy("createdAt", "desc"),
-              startAfter(pageSnapshots[currentPage - 1].docs[itemsPerPage - 1]),
-              limit(itemsPerPage)
-            );
-            querySnapshot = await getDocs(pageQuery);
-          }
-
-          setPageSnapshots((prev) => ({
-            ...prev,
-            [currentPage]: querySnapshot,
-          }));
-        }
-
-        const fetchedData = querySnapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
-
-        setData(fetchedData.map(decryptData));
-
-        setLastVisible(querySnapshot.docs[querySnapshot.docs.length - 1]);
-        setFirstVisible(querySnapshot.docs[0]);
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    fetchData();
+    setTimeout(() => {
+      setData(clients.slice(currentPage * 50, (currentPage + 1) * 50));
+    }, [1000]);
   }, [currentPage]);
-
   const onConfirm = (user_id) => {};
   const onCancel = (user_id) => {};
   const onRemove = (uuid) => {
@@ -118,8 +27,8 @@ export default function Table({ showActions = true, isApproved = false }) {
     <>
       <Header
         currentPage={currentPage}
-        totalPages={totalPages}
-        isApproved={isApproved}
+        total_pages={total_pages}
+        setCurrentPage={setCurrentPage}
       />
       <div className="relative overflow-x-auto rounded-xl shadow-md border border-gray-200">
         <table className="w-full text-sm text-left">
@@ -154,10 +63,10 @@ export default function Table({ showActions = true, isApproved = false }) {
                 <td className="px-6 py-4 font-medium text-gray-900">
                   {item.name}
                 </td>
-                <td className="px-6 py-4 text-gray-600">{item.phoneNo}</td>
+                <td className="px-6 py-4 text-gray-600">{item.phone_no}</td>
                 <td className="px-6 py-4 text-gray-600">{item.id}</td>
                 <td className="px-6 py-4 text-gray-600">
-                  {formatTimestamp(item.createdAt)}
+                  {new Date().toLocaleDateString()}
                 </td>
                 <td className="px-6 py-4">
                   {showActions ? (
@@ -203,7 +112,7 @@ export default function Table({ showActions = true, isApproved = false }) {
         </table>
       </div>
       <Pagination
-        totalPages={totalPages}
+        totalPages={total_pages}
         page={currentPage}
         setPage={setCurrentPage}
       />
