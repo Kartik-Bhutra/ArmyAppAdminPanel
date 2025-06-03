@@ -1,10 +1,15 @@
 "use client";
 
-export default function Header({ currentPage, total_pages }) {
+export default function Header({
+  currentPage,
+  total_pages,
+  isApproved = false,
+}) {
   return (
     <div className="flex justify-between items-center mb-4">
       <h2 className="text-xl font-semibold">
-        New Clients (Page {currentPage + 1} of {total_pages})
+        {isApproved ? "Approved" : "New"} Clients (Page {currentPage + 1} of{" "}
+        {total_pages})
       </h2>
     </div>
   );
