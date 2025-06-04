@@ -10,87 +10,111 @@ import {
 import { redirect } from "next/navigation";
 import Table from "../(components)/Table";
 import Pagination from "@/components/Pagination";
+import NoData from "../(components)/NoData";
+import Error from "../(components)/Error";
 
 const previousFetchData = [];
 const rowPerPage = 25;
 let lastVisible = null;
 
 export default async function RequestPage({ searchParams }) {
-  let { page = "1" } = await searchParams;
-  page = Number(page);
-  if (page <= 0) {
-    redirect("/clients/requests?page=1");
-  }
-
-  const LastNextPage = page + 3;
-  const pageData = [];
-  const clientRef = collection(db, "clients");
-  let lastPageNo = Math.ceil(previousFetchData.length / rowPerPage);
-
-  if (lastPageNo === 0) {
-    const q = query(
-      clientRef,
-      orderBy("createdAt", "desc"),
-      limit(rowPerPage * LastNextPage)
-    );
-    const { docs } = await getDocs(q);
-    docs.forEach((doc) => {
-      const data = doc.data();
-      previousFetchData.push({
-        id: doc.id,
-        ...data,
-        createdAt: data.createdAt?.toDate().toISOString() || null,
-      });
-    });
-    lastVisible = docs[docs.length - 1];
-    lastPageNo = Math.ceil(previousFetchData.length / rowPerPage);
-
-    if (lastPageNo < page) {
-      redirect(`/clients/requests?page=${lastPageNo}`);
+  try {
+    let { page = "1" } = await searchParams;
+    page = Number(page);
+    if (page <= 0) {
+      redirect("/clients/requests?page=1");
     }
-  } else if (lastPageNo < LastNextPage) {
-    const q = query(
-      clientRef,
-      orderBy("createdAt", "desc"),
-      startAfter(lastVisible),
-      limit(rowPerPage * LastNextPage - previousFetchData.length)
-    );
-    const { docs } = await getDocs(q);
-    if (docs.length > 0) {
-      docs.forEach((doc) => {
-        const data = doc.data();
-        previousFetchData.push({
-          id: doc.id,
-          ...data,
-          createdAt: data.createdAt?.toDate().toISOString() || null,
+
+    const LastNextPage = page + 3;
+    const pageData = [];
+    const clientRef = collection(db, "clients");
+    let lastPageNo = Math.ceil(previousFetchData.length / rowPerPage);
+
+    if (lastPageNo === 0) {
+      const q = query(
+        clientRef,
+        orderBy("createdAt", "desc"),
+        limit(rowPerPage * LastNextPage)
+      );
+
+      try {
+        const { docs } = await getDocs(q);
+
+        if (docs.length === 0) {
+          return <NoData />;
+        }
+
+        docs.forEach((doc) => {
+          const data = doc.data();
+          previousFetchData.push({
+            id: doc.id,
+            ...data,
+            createdAt: data.createdAt?.toDate().toISOString() || null,
+          });
         });
-      });
-      lastVisible = docs[docs.length - 1];
-      lastPageNo = Math.ceil(previousFetchData.length / rowPerPage);
+        lastVisible = docs[docs.length - 1];
+        lastPageNo = Math.ceil(previousFetchData.length / rowPerPage);
+
+        if (lastPageNo < page) {
+          redirect(`/clients/requests?page=${lastPageNo}`);
+        }
+      } catch (error) {
+        console.error("Error fetching initial data:", error);
+        return (
+          <Error message="Failed to load client data. Please try again later." />
+        );
+      }
+    } else if (lastPageNo < LastNextPage) {
+      const q = query(
+        clientRef,
+        orderBy("createdAt", "desc"),
+        startAfter(lastVisible),
+        limit(rowPerPage * LastNextPage - previousFetchData.length)
+      );
+      const { docs } = await getDocs(q);
+      if (docs.length > 0) {
+        docs.forEach((doc) => {
+          const data = doc.data();
+          previousFetchData.push({
+            id: doc.id,
+            ...data,
+            createdAt: data.createdAt?.toDate().toISOString() || null,
+          });
+        });
+        lastVisible = docs[docs.length - 1];
+        lastPageNo = Math.ceil(previousFetchData.length / rowPerPage);
+      }
+
+      if (lastPageNo < page) {
+        redirect(`/clients/requests?page=${lastPageNo}`);
+      }
+    } else {
+      console.log("NO DATA Fetched");
     }
 
-    if (lastPageNo < page) {
-      redirect(`/clients/requests?page=${lastPageNo}`);
+    pageData.push(
+      ...previousFetchData.slice(
+        rowPerPage * (page - 1),
+        Math.min(previousFetchData.length, rowPerPage * page)
+      )
+    );
+
+    if (!pageData.length) {
+      return <NoData />;
     }
-  } else {
-    console.log("NO DATA Fetched");
+
+    return (
+      <div className="container">
+        <Table data={pageData} />
+        <Pagination
+          currentPage={page}
+          totalPages={lastPageNo}
+          baseUrl="/clients/requests"
+        />
+      </div>
+    );
+  } catch (error) {
+    console.error("Page error:", error);
+    return <Error message="Something went wrong while loading the page." />;
   }
-
-  pageData.push(
-    ...previousFetchData.slice(
-      rowPerPage * (page - 1),
-      Math.min(previousFetchData.length, rowPerPage * page)
-    )
-  );
-
-  return (
-    <div className="container">
-      <Table data={pageData} />
-      <Pagination
-        currentPage={page}
-        totalPages={lastPageNo}
-        baseUrl="/clients/requests"
-      />
-    </div>
-  );
 }
