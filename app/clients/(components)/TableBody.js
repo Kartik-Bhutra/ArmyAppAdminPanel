@@ -1,7 +1,6 @@
 "use client";
 import { motion } from "framer-motion";
 import { decrypt } from "@/hooks/useDecrypt";
-import Loader from "@/components/Loader";
 
 function formatTimestamp(isoString) {
   if (!isoString) return "N/A";
@@ -15,7 +14,10 @@ function formatTimestamp(isoString) {
   });
 }
 
-export default function TableBody({ data, isApproved = false }) {
+export default function TableBody({
+  data,
+  isApproved = false,
+}) {
   const decryptData = (item) => {
     try {
       return {
@@ -35,23 +37,11 @@ export default function TableBody({ data, isApproved = false }) {
   const onCancel = (user_id) => {};
   const onRemove = (uuid) => {};
 
-  if (!data) {
-    return (
-      <tr>
-        <td colSpan={5}>
-          <div className="flex justify-center items-center min-h-[400px]">
-            <Loader />
-          </div>
-        </td>
-      </tr>
-    );
-  }
-
   return (
     <tbody className="divide-y divide-gray-200">
       {decryptedData.map((item, key) => (
         <motion.tr
-          key={key}
+          key={item.id}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: key * 0.05 }}
@@ -61,7 +51,9 @@ export default function TableBody({ data, isApproved = false }) {
           <td className="px-6 py-4 text-gray-600 sm:table-cell text-center">
             {item.phoneNo}
           </td>
-          <td className="px-6 py-4 text-gray-600 md:table-cell text-center">{item.UUID}</td>
+          <td className="px-6 py-4 text-gray-600 md:table-cell text-center">
+            {item.UUID}
+          </td>
           <td className="px-6 py-4 text-gray-600 sm:table-cell text-center">
             {formatTimestamp(item.createdAt)}
           </td>
