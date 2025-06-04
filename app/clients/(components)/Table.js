@@ -1,24 +1,12 @@
 "use client";
-import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { decrypt } from "@/hooks/useDecrypt";
-import Header from "./Header";
-import Pagination from "@/components/Pagination";
 import Loader from "@/components/Loader";
-import { db } from "@/lib/firebaseConfig";
-import {
-  collection,
-  query,
-  limit,
-  getDocs,
-  orderBy,
-  startAfter,
-} from "firebase/firestore";
 
-function formatTimestamp(timestamp) {
-  if (!timestamp || !timestamp.toDate) return "N/A";
+function formatTimestamp(isoString) {
+  if (!isoString) return "N/A";
 
-  const date = timestamp.toDate();
+  const date = new Date(isoString);
   return date.toLocaleString("en-IN", {
     year: "numeric",
     month: "long",
@@ -30,16 +18,7 @@ function formatTimestamp(timestamp) {
   });
 }
 
-export default function Table({ showActions = true, isApproved = false }) {
-  const [currentPage, setCurrentPage] = useState(0);
-  const [data, setData] = useState([]);
-  const [totalPages, setTotalPages] = useState(20);
-  const [loading, setLoading] = useState(true);
-  const [lastVisible, setLastVisible] = useState(null);
-  const [firstVisible, setFirstVisible] = useState(null);
-  const [pageSnapshots, setPageSnapshots] = useState({});
-  const itemsPerPage = 50;
-
+export default function Table({ data, isApproved = false }) {
   const decryptData = (item) => {
     try {
       return {
@@ -53,74 +32,14 @@ export default function Table({ showActions = true, isApproved = false }) {
     }
   };
 
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        setLoading(true);
-        const clientsRef = collection(db, "clients");
-
-        const snapshot = await getDocs(clientsRef);
-        setTotalPages(Math.ceil(snapshot.size / itemsPerPage));
-
-        let querySnapshot;
-        if (pageSnapshots[currentPage]) {
-          querySnapshot = pageSnapshots[currentPage];
-        } else {
-          if (currentPage === 0) {
-            const firstPageQuery = query(
-              clientsRef,
-              orderBy("createdAt", "desc"),
-              limit(itemsPerPage)
-            );
-            querySnapshot = await getDocs(firstPageQuery);
-          } else {
-            const pageQuery = query(
-              clientsRef,
-              orderBy("createdAt", "desc"),
-              startAfter(pageSnapshots[currentPage - 1].docs[itemsPerPage - 1]),
-              limit(itemsPerPage)
-            );
-            querySnapshot = await getDocs(pageQuery);
-          }
-
-          setPageSnapshots((prev) => ({
-            ...prev,
-            [currentPage]: querySnapshot,
-          }));
-        }
-
-        const fetchedData = querySnapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
-
-        setData(fetchedData.map(decryptData));
-
-        setLastVisible(querySnapshot.docs[querySnapshot.docs.length - 1]);
-        setFirstVisible(querySnapshot.docs[0]);
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    fetchData();
-  }, [currentPage]);
+  const decryptedData = data.map(decryptData);
 
   const onConfirm = (user_id) => {};
   const onCancel = (user_id) => {};
-  const onRemove = (uuid) => {
-    console.log("Removing client:", uuid);
-  };
+  const onRemove = (uuid) => {};
 
   return (
     <>
-      <Header
-        currentPage={currentPage}
-        totalPages={totalPages}
-        isApproved={isApproved}
-      />
       <div className="relative overflow-x-auto rounded-xl shadow-md border border-gray-200">
         <table className="w-full text-sm text-left">
           <thead className="text-xs text-gray-700 bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-200">
@@ -143,7 +62,7 @@ export default function Table({ showActions = true, isApproved = false }) {
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
-            {data.map((item, key) => (
+            {decryptedData.map((item, key) => (
               <motion.tr
                 key={key}
                 initial={{ opacity: 0, y: 20 }}
@@ -160,7 +79,16 @@ export default function Table({ showActions = true, isApproved = false }) {
                   {formatTimestamp(item.createdAt)}
                 </td>
                 <td className="px-6 py-4">
-                  {showActions ? (
+                  {isApproved ? (
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      className="px-4 py-2 bg-red-500 text-white rounded-lg text-sm font-medium shadow-sm hover:bg-red-600 transition-colors"
+                      onClick={() => onRemove(item.id)}
+                    >
+                      Remove
+                    </motion.button>
+                  ) : (
                     <div className="flex gap-2">
                       <motion.button
                         whileHover={{ scale: 1.05 }}
@@ -179,20 +107,11 @@ export default function Table({ showActions = true, isApproved = false }) {
                         Decline
                       </motion.button>
                     </div>
-                  ) : (
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      className="px-4 py-2 bg-red-500 text-white rounded-lg text-sm font-medium shadow-sm hover:bg-red-600 transition-colors"
-                      onClick={() => onRemove(item.id)}
-                    >
-                      Remove
-                    </motion.button>
                   )}
                 </td>
               </motion.tr>
             ))}
-            {data.length === 0 && (
+            {decryptedData.length === 0 && (
               <tr>
                 <td colSpan={5} className="px-6 py-8 text-center">
                   <Loader />
@@ -202,11 +121,6 @@ export default function Table({ showActions = true, isApproved = false }) {
           </tbody>
         </table>
       </div>
-      <Pagination
-        totalPages={totalPages}
-        page={currentPage}
-        setPage={setCurrentPage}
-      />
     </>
   );
 }
