@@ -12,8 +12,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useState, useEffect } from "react";
 import Table from "../(components)/Table";
 import Pagination from "@/components/Pagination";
-import NoData from "../(components)/NoData";
-import Error from "../(components)/Error";
+import Error from "@/components/Error";
+import NoData from "@/components/NoData";
 
 const previousFetchData = [];
 const rowPerPage = 25;

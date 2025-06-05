@@ -1,26 +1,133 @@
-import Dashboard from "@/components/Dashboard";
-import Table from "@/app/reports/(components)/Table";
-import { getAuthUser } from "@/utils/getAuthUser";
-import { redirect } from "next/navigation";
+"use client";
+import { db } from "@/lib/firebaseConfig";
+import {
+  collection,
+  getDocs,
+  limit,
+  orderBy,
+  query,
+  startAfter,
+} from "firebase/firestore";
+import { useSearchParams, useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import Table from "./(components)/Table";
+import Pagination from "@/components/Pagination";
+import Error from "@/components/Error";
+import NoData from "@/components/NoData";
 
-export default async function Reports() {
-  let user;
+const previousFetchData = [];
+const rowPerPage = 25;
+let lastVisible = null;
 
-  try {
-    user = await getAuthUser();
-    if (!user) {
-      redirect("/login");
+export default function ReportsPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const page = Number(searchParams.get("page") || "1");
+  const [pageData, setPageData] = useState([]);
+  const [error, setError] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        if (page <= 0) {
+          router.push("/reports?page=1");
+          return;
+        }
+        const LastNextPage = page + 3;
+        const reportsRef = collection(db, "reports");
+        let lastPageNo = Math.ceil(previousFetchData.length / rowPerPage);
+
+        if (lastPageNo === 0) {
+          const q = query(reportsRef, limit(rowPerPage * LastNextPage));
+
+          const { docs } = await getDocs(q);
+
+          if (docs.length === 0) {
+            setPageData([]);
+            return;
+          }
+
+          docs.forEach((doc) => {
+            const data = doc.data();
+            const reportData = {
+              id: doc.id,
+              ...data,
+              by: data.by.map((reporter) => ({
+                ...reporter,
+                reportedAt: reporter.reportedAt?.toDate() || null,
+              })),
+            };
+            previousFetchData.push(reportData);
+          });
+          lastVisible = docs[docs.length - 1];
+          lastPageNo = Math.ceil(previousFetchData.length / rowPerPage);
+
+          if (lastPageNo < page) {
+            router.push(`/reports?page=${lastPageNo}`);
+            return;
+          }
+        } else if (lastPageNo < LastNextPage) {
+          const q = query(
+            reportsRef,
+            startAfter(lastVisible),
+            limit(rowPerPage * LastNextPage - previousFetchData.length)
+          );
+          const { docs } = await getDocs(q);
+          if (docs.length > 0) {
+            docs.forEach((doc) => {
+              const data = doc.data();
+              previousFetchData.push({
+                id: doc.id,
+                ...data,
+                createdAt: data.createdAt?.toDate().toISOString() || null,
+              });
+            });
+            lastVisible = docs[docs.length - 1];
+            lastPageNo = Math.ceil(previousFetchData.length / rowPerPage);
+          }
+
+          if (lastPageNo < page) {
+            router.push(`/reports?page=${lastPageNo}`);
+            return;
+          }
+        }
+
+        const currentPageData = previousFetchData.slice(
+          rowPerPage * (page - 1),
+          Math.min(previousFetchData.length, rowPerPage * page)
+        );
+
+        setPageData(currentPageData);
+        setIsLoading(false);
+      } catch (err) {
+        console.error("Error fetching data:", err);
+        setError(err);
+        setIsLoading(false);
+      }
     }
-  } catch (err) {
-    redirect("/login");
+
+    fetchData();
+  }, [page, router]);
+
+  if (error) {
+    return <Error message="Failed to load reports. Please try again later." />;
   }
+
+  if (!pageData.length && !isLoading) {
+    return <NoData />;
+  }
+
+  const lastPageNo = Math.ceil(previousFetchData.length / rowPerPage);
+
   return (
-    <Dashboard user={user}>
-      <main className="p-6">
-        <div className="bg-white bordered">
-          <Table />
-        </div>
-      </main>
-    </Dashboard>
+    <div className="container">
+      <Table data={pageData} isLoading={isLoading} />
+      <Pagination
+        currentPage={page}
+        totalPages={lastPageNo}
+        baseUrl="/reports"
+      />
+    </div>
   );
 }
