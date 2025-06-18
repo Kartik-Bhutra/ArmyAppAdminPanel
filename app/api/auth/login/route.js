@@ -1,11 +1,10 @@
 import { db, auth } from "@/lib/firebaseAdmin";
 import { NextResponse } from "next/server";
-import {useHash, verifyHash} from "@/hooks/useHash";
+import argon2 from "argon2";
 
 export async function POST(req) {
   try {
     const { userId, password } = await req.json();
-
     const userDoc = await db.collection("admins").doc(userId).get();
 
     if (!userDoc.exists) {
@@ -13,8 +12,8 @@ export async function POST(req) {
     }
 
     const userData = userDoc.data();
-    const hashedPassword = useHash(password);
-    if (verifyHash(hashedPassword, userData.passwordHash, userData.salt)) {
+    const val = await argon2.verify(userData.passwordHash,password);
+    if (val) {
       return NextResponse.json(
         { message: "Incorrect Password" },
         { status: 401 }
