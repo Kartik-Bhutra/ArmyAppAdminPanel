@@ -1,108 +1,84 @@
 "use client";
 import { db } from "@/lib/firebaseConfig";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useState, useEffect } from "react";
 import {
   collection,
+  doc,
+  getDoc,
   getDocs,
   limit,
-  orderBy,
   query,
-  startAfter,
 } from "firebase/firestore";
-import { useSearchParams, useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
 import Table from "./(components)/Table";
 import Pagination from "@/components/Pagination";
 import Error from "@/components/Error";
 import NoData from "@/components/NoData";
 
-const previousFetchData = [];
-const rowPerPage = 25;
-let lastVisible = null;
-
 export default function ReportsPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const page = Number(searchParams.get("page") || "1");
+
   const [pageData, setPageData] = useState([]);
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [lastPageNumber, setLastPageNumber] = useState(0);
+
+  const rowPerPage = 25;
 
   useEffect(() => {
     async function fetchData() {
+      if (page <= 0) {
+        router.push("/reports?page=1");
+        return;
+      }
+
+      setIsLoading(true);
+
       try {
-        if (page <= 0) {
-          router.push("/reports?page=1");
-          return;
-        }
-        const LastNextPage = page + 3;
-        const reportsRef = collection(db, "reports");
-        let lastPageNo = Math.ceil(previousFetchData.length / rowPerPage);
+        const countRef = doc(db, "reports", "metadata");
+        const countSnap = await getDoc(countRef);
 
-        if (lastPageNo === 0) {
-          const q = query(reportsRef, limit(rowPerPage * LastNextPage));
+        if (countSnap.exists()) {
+          const countData = countSnap.data();
+          const totalCount = countData.reports;
+          const totalPages = Math.ceil(totalCount / rowPerPage);
+          setLastPageNumber(totalPages);
 
-          const { docs } = await getDocs(q);
-
-          if (docs.length === 0) {
-            setPageData([]);
+          if (page > totalPages) {
+            router.push(`/reports?page=${totalPages}`);
             return;
           }
+          const reportsRef = collection(db, "reports");
+          const q = query(reportsRef, limit(page * rowPerPage));
+          const snapshot = await getDocs(q);
 
-          docs.forEach((doc) => {
+          const slicedDocs = snapshot.docs.slice(
+            (page - 1) * rowPerPage,
+            page * rowPerPage
+          );
+
+          const formatted = slicedDocs.map(doc => {
             const data = doc.data();
-            const reportData = {
+            return {
               id: doc.id,
               ...data,
-              by: data.by.map((reporter) => ({
+              by: data.by?.map(reporter => ({
                 ...reporter,
                 reportedAt: reporter.reportedAt?.toDate() || null,
               })),
             };
-            previousFetchData.push(reportData);
           });
-          lastVisible = docs[docs.length - 1];
-          lastPageNo = Math.ceil(previousFetchData.length / rowPerPage);
 
-          if (lastPageNo < page) {
-            router.push(`/reports?page=${lastPageNo}`);
-            return;
-          }
-        } else if (lastPageNo < LastNextPage) {
-          const q = query(
-            reportsRef,
-            startAfter(lastVisible),
-            limit(rowPerPage * LastNextPage - previousFetchData.length)
-          );
-          const { docs } = await getDocs(q);
-          if (docs.length > 0) {
-            docs.forEach((doc) => {
-              const data = doc.data();
-              previousFetchData.push({
-                id: doc.id,
-                ...data,
-                createdAt: data.createdAt?.toDate().toISOString() || null,
-              });
-            });
-            lastVisible = docs[docs.length - 1];
-            lastPageNo = Math.ceil(previousFetchData.length / rowPerPage);
-          }
-
-          if (lastPageNo < page) {
-            router.push(`/reports?page=${lastPageNo}`);
-            return;
-          }
+          setPageData(formatted);
+        } else {
+          setLastPageNumber(0);
+          setPageData([]);
         }
-
-        const currentPageData = previousFetchData.slice(
-          rowPerPage * (page - 1),
-          Math.min(previousFetchData.length, rowPerPage * page)
-        );
-
-        setPageData(currentPageData);
-        setIsLoading(false);
       } catch (err) {
-        console.error("Error fetching data:", err);
-        setError(err);
+        setError(err.message);
+      } finally {
         setIsLoading(false);
       }
     }
@@ -118,14 +94,12 @@ export default function ReportsPage() {
     return <NoData />;
   }
 
-  const lastPageNo = Math.ceil(previousFetchData.length / rowPerPage);
-
   return (
     <div className="container">
       <Table data={pageData} isLoading={isLoading} />
       <Pagination
         currentPage={page}
-        totalPages={lastPageNo}
+        totalPages={lastPageNumber}
         baseUrl="/reports"
       />
     </div>

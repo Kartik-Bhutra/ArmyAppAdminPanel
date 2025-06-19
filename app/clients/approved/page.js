@@ -1,24 +1,21 @@
 "use client";
 import { db } from "@/lib/firebaseConfig";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useState, useEffect } from "react";
 import {
   collection,
+  doc,
+  getDoc,
   getDocs,
   limit,
   orderBy,
   query,
-  startAfter,
+  where,
 } from "firebase/firestore";
-import { useRouter, useSearchParams } from "next/navigation";
-import { useState, useEffect } from "react";
 import Table from "../(components)/Table";
 import Pagination from "@/components/Pagination";
 import Error from "@/components/Error";
 import NoData from "@/components/NoData";
-
-const previousFetchData = [];
-const rowPerPage = 25;
-let lastVisible = null;
-
 export default function ApprovedPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -26,109 +23,74 @@ export default function ApprovedPage() {
   const [pageData, setPageData] = useState([]);
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
-
+  const [lastPageNumber, setLastPageNumber] = useState(0);
+  const rowPerPage = 25;
   useEffect(() => {
-    async function fetchData() {
+    async function fetchPageData() {
+      if (page <= 0) {
+        router.push("/clients/approved?page=1");
+        return;
+      }
+      setIsLoading(true);
       try {
-        if (page <= 0) {
-          router.push("/clients/requests?page=1");
-          return;
-        }
-
-        const LastNextPage = page + 3;
-        const clientRef = collection(db, "clients");
-        let lastPageNo = Math.ceil(previousFetchData.length / rowPerPage);
-        if (lastPageNo === 0) {
-          const q = query(
-            clientRef,
-            orderBy("createdAt", "desc"),
-            limit(rowPerPage * LastNextPage)
-          );
-
-          const { docs } = await getDocs(q);
-
-          if (docs.length === 0) {
-            setPageData([]);
+        const countRef = doc(db, "clients", "metadata");
+        const docSnap = await getDoc(countRef);
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          const approvedCount = data.approved;
+          const totalPages = Math.ceil(approvedCount / rowPerPage);
+          setLastPageNumber(totalPages);
+          if (page > totalPages) {
+            router.push(`/clients/approved?page=${totalPages}`);
             return;
           }
-
-          docs.forEach((doc) => {
-            const data = doc.data();
-            previousFetchData.push({
+          const clientRef = collection(db, "clients");
+          const q = query(
+            clientRef,
+            where("authenticated", "==", true),
+            orderBy("createdAt", "desc"),
+            limit(page * rowPerPage)
+          );
+          const snapshot = await getDocs(q);
+          const docs = snapshot.docs.slice(
+            (page - 1) * rowPerPage,
+            page * rowPerPage
+          );
+          const formattedDocs = docs.map((doc) => {
+            const d = doc.data();
+            return {
               id: doc.id,
-              ...data,
-              createdAt: data.createdAt?.toDate().toISOString() || null,
-            });
+              ...d,
+              createdAt: d.createdAt?.toDate().toISOString() || null,
+            };
           });
-          lastVisible = docs[docs.length - 1];
-          lastPageNo = Math.ceil(previousFetchData.length / rowPerPage);
-
-          if (lastPageNo < page) {
-            router.push(`/clients/requests?page=${lastPageNo}`);
-            return;
-          }
-        } else if (lastPageNo < LastNextPage) {
-          const q = query(
-            clientRef,
-            orderBy("createdAt", "desc"),
-            startAfter(lastVisible),
-            limit(rowPerPage * LastNextPage - previousFetchData.length)
-          );
-          const { docs } = await getDocs(q);
-          if (docs.length > 0) {
-            docs.forEach((doc) => {
-              const data = doc.data();
-              previousFetchData.push({
-                id: doc.id,
-                ...data,
-                createdAt: data.createdAt?.toDate().toISOString() || null,
-              });
-            });
-            lastVisible = docs[docs.length - 1];
-            lastPageNo = Math.ceil(previousFetchData.length / rowPerPage);
-          }
-
-          if (lastPageNo < page) {
-            router.push(`/clients/requests?page=${lastPageNo}`);
-            return;
-          }
+          setPageData(formattedDocs);
+        } else {
+          setLastPageNumber(0);
+          setPageData([]);
         }
-
-        const currentPageData = previousFetchData.slice(
-          rowPerPage * (page - 1),
-          Math.min(previousFetchData.length, rowPerPage * page)
-        );
-
-        setPageData(currentPageData);
-        setIsLoading(false);
       } catch (err) {
-        console.error("Error fetching data:", err);
-        setError(err);
+        setError(err.message);
+      } finally {
         setIsLoading(false);
       }
     }
-
-    fetchData();
+    fetchPageData();
   }, [page, router]);
-
   if (error) {
     return (
       <Error message="Failed to load approved clients. Please try again later." />
     );
   }
-
   if (!pageData.length && !isLoading) {
     return <NoData />;
   }
-
-  const lastPageNo = Math.ceil(previousFetchData.length / rowPerPage);
-
   return (
     <div className="container">
       <Table data={pageData} isApproved={true} isLoading={isLoading} />
       <Pagination
         currentPage={page}
-        totalPages={lastPageNo}
+        totalPages={lastPageNumber}
         baseUrl="/clients/approved"
       />
     </div>
