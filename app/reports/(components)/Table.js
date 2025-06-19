@@ -1,17 +1,10 @@
 import { motion } from "framer-motion";
-import Filter from "./Filter";
 import TableBody from "./TableBody";
 import Loader from "@/components/Loader";
 import React, { useState } from "react";
 
 export default function Table({ data = [], isLoading = false }) {
   const [selectedRows, setSelectedRows] = useState(new Set());
-  const [showFilter, setShowFilter] = useState(false);
-  const [filters, setFilters] = useState({
-    number: "",
-    reportedBy: "",
-    sortByUpvotes: false,
-  });
 
   const toggleRow = (index) => {
     const newSelected = new Set(selectedRows);
@@ -21,29 +14,6 @@ export default function Table({ data = [], isLoading = false }) {
       newSelected.add(index);
     }
     setSelectedRows(newSelected);
-  };
-
-  const handleFilterChange = (e) => {
-    const { name, value } = e.target;
-    setFilters((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
-
-  const handleSortToggle = () => {
-    setFilters((prev) => ({
-      ...prev,
-      sortByUpvotes: !prev.sortByUpvotes,
-    }));
-  };
-
-  const resetFilters = () => {
-    setFilters({
-      number: "",
-      reportedBy: "",
-      sortByUpvotes: false,
-    });
   };
   return (
     <div className="bg-white rounded-lg shadow-sm mx-auto max-w-[100vw]">
@@ -55,17 +25,8 @@ export default function Table({ data = [], isLoading = false }) {
         >
           <h2 className="text-lg sm:text-xl font-semibold text-gray-800">
             Reported Numbers{" "}
-            <span className="text-xs sm:text-sm text-gray-500">
-            </span>
+            <span className="text-xs sm:text-sm text-gray-500"></span>
           </h2>
-          {/* <Filter
-            handleFilterChange={handleFilterChange}
-            filters={filters}
-            handleSortToggle={handleSortToggle}
-            resetFilters={resetFilters}
-            setShowFilter={setShowFilter}
-            showFilter={showFilter}
-          /> */}
         </motion.div>
       </div>
 

@@ -59,11 +59,11 @@ export default function TableBody({ data, selectedRows, toggleRow }) {
               </motion.div>
             </td>
             <td className="px-6 py-4 font-medium text-gray-900 text-center">
-              {decryptPhoneNo(item.phone_no, item.iv)}
+              {item.phone_no}
             </td>
             <td className="px-6 py-4 text-center">
               <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded">
-                {item.by.length}
+                {console.log(item.by)}
               </span>
             </td>
             <td className="px-6 py-4">

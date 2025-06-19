@@ -1,5 +1,7 @@
 import { motion } from "framer-motion";
 import { decrypt } from "@/hooks/useDecrypt";
+import { db } from "@/lib/firebaseConfig";
+import { deleteDoc, doc, serverTimestamp, updateDoc } from "firebase/firestore";
 
 function formatTimestamp(isoString) {
   if (!isoString) return "N/A";
@@ -13,10 +15,7 @@ function formatTimestamp(isoString) {
   });
 }
 
-export default function TableBody({
-  data,
-  isApproved = false,
-}) {
+export default function TableBody({ data, isApproved = false }) {
   const decryptData = (item) => {
     try {
       return {
@@ -32,9 +31,26 @@ export default function TableBody({
 
   const decryptedData = data?.map(decryptData) || [];
 
-  const onConfirm = (user_id) => {};
-  const onCancel = (user_id) => {};
-  const onRemove = (uuid) => {};
+  const onRemove = async (docId) => {
+    try {
+      await deleteDoc(doc(db, "clients", docId));
+      window.location.reload();
+    } catch (error) {
+      console.error("Failed to delete document:", error);
+    }
+  };
+
+  const onApprove = async (docId) => {
+    try {
+      await updateDoc(doc(db, "clients", docId), {
+        authenticated: true,
+        createdAt: serverTimestamp(),
+      });
+      window.location.reload();
+    } catch (error) {
+      console.error("Failed to approve client:", error);
+    }
+  };
 
   return (
     <tbody className="divide-y divide-gray-200">
@@ -72,7 +88,7 @@ export default function TableBody({
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   className="w-full sm:w-auto px-4 py-2 bg-green-500 text-white rounded-lg text-sm font-medium shadow-sm hover:bg-green-600 transition-colors"
-                  onClick={() => onConfirm(item.id)}
+                  onClick={() => onApprove(item.id)}
                 >
                   Approve
                 </motion.button>
@@ -80,7 +96,7 @@ export default function TableBody({
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   className="w-full sm:w-auto px-4 py-2 bg-red-500 text-white rounded-lg text-sm font-medium shadow-sm hover:bg-red-600 transition-colors"
-                  onClick={() => onCancel(item.id)}
+                  onClick={() => onRemove(item.id)}
                 >
                   Decline
                 </motion.button>
