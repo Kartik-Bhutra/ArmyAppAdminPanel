@@ -1,6 +1,9 @@
+"use client";
 import { motion } from "framer-motion";
 import ChevronIcon from "@/icons/ChevronIcon";
 import React from "react";
+import { deleteDoc, doc, setDoc, serverTimestamp } from "firebase/firestore";
+import { db } from "@/lib/firebaseConfig";
 
 function formatTimestamp(timestamp) {
   if (!timestamp) return "N/A";
@@ -16,16 +19,33 @@ function formatTimestamp(timestamp) {
 }
 
 export default function TableBody({ data, selectedRows, toggleRow }) {
-  const onBlock = (mobile, e) => {
+  const onBlock = async (id, e) => {
     e.stopPropagation();
+    try {
+      const blockedRef = doc(db, "blocked", id.mobile);
+      await setDoc(blockedRef, {
+        createdAt: serverTimestamp(),
+      });
 
-    console.log("Blocking:", mobile);
+      const reportRef = doc(db, "reports", id.id);
+      await deleteDoc(reportRef);
+      console.log(`Blocked and removed report: ${id.mobile}`);
+      window.location.reload();
+    } catch (err) {
+      console.error("Error blocking:", err);
+    }
   };
 
-  const onSafe = (mobile, e) => {
+  const onSafe = async (mobile, e) => {
     e.stopPropagation();
-
-    console.log("Marking as safe:", mobile);
+    try {
+      const reportRef = doc(db, "reports", mobile);
+      await deleteDoc(reportRef);
+      console.log(`Marked as safe and deleted report: ${mobile}`);
+      window.location.reload();
+    } catch (err) {
+      console.error("Error deleting report:", err);
+    }
   };
 
   return (
@@ -61,7 +81,7 @@ export default function TableBody({ data, selectedRows, toggleRow }) {
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  onClick={(e) => onSafe(item.mobile, e)}
+                  onClick={(e) => onSafe(item.id, e)}
                   className="w-full sm:w-auto px-3 py-1.5 rounded-lg bg-green-500 text-white hover:bg-green-600 transition-colors text-sm"
                 >
                   Safe
@@ -69,7 +89,7 @@ export default function TableBody({ data, selectedRows, toggleRow }) {
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  onClick={(e) => onBlock(item.mobile, e)}
+                  onClick={(e) => onBlock(item, e)}
                   className="w-full sm:w-auto px-3 py-1.5 rounded-lg bg-red-500 text-white hover:bg-red-600 transition-colors text-sm"
                 >
                   Block

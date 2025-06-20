@@ -1,16 +1,21 @@
 import TableBody from "./TableBody";
 import Modal from "@/components/Modal";
-import Pagination from "@/components/Pagination";
 import codes from "@/constants/CountryCodes.json";
 import Loader from "@/components/Loader";
 import Select from "@/components/Select";
 import Input from "@/components/Input";
 import SeqInput from "@/components/SeqInput";
 import { useState } from "react";
+import {
+  collection,
+  doc,
+  setDoc,
+  deleteDoc,
+  serverTimestamp,
+} from "firebase/firestore";
+import { db } from "@/lib/firebaseConfig";
 
 export default function Table({ data = [], isLoading = false }) {
-  const totalPages = 1;
-  const [currentPage, setCurrentPage] = useState(0);
   const [openCreate, setOpenCreate] = useState(false);
   const [openDelete, setOpenDelete] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
@@ -18,8 +23,42 @@ export default function Table({ data = [], isLoading = false }) {
   const [seq, setSeq] = useState("");
   const [remark, setRemark] = useState("");
 
-  const onCreate = () => {};
-  const onDelete = () => {};
+  const onCreate = async () => {
+    const fullNumber = `${code}${seq}`;
+
+    if (!seq) {
+      alert("Please fill out both sequence and remark.");
+      return;
+    }
+
+    try {
+      await setDoc(doc(collection(db, "blocked"), fullNumber), {
+        createdAt: serverTimestamp(),
+      });
+
+      setOpenCreate(false);
+      setSeq("");
+      setRemark("");
+      window.location.reload();
+    } catch (err) {
+      console.error("Error adding sequence:", err);
+      alert("Failed to add sequence.");
+    }
+  };
+
+  const onDelete = async () => {
+    if (!deleteId) return;
+
+    try {
+      await deleteDoc(doc(db, "blocked", deleteId));
+      setOpenDelete(false);
+      setDeleteId(null);
+      window.location.reload();
+    } catch (err) {
+      console.error("Error deleting sequence:", err);
+      alert("Failed to delete sequence.");
+    }
+  };
 
   return (
     <>
@@ -57,7 +96,9 @@ export default function Table({ data = [], isLoading = false }) {
 
       <div className="bg-white rounded-lg shadow-sm mx-auto max-w-[100vw]">
         <div className="flex justify-between items-center px-6 py-4 border-b border-gray-200">
-          <h2 className="text-lg font-semibold text-gray-800">Blocked Sequences</h2>
+          <h2 className="text-lg font-semibold text-gray-800">
+            Blocked blocked
+          </h2>
           <button
             className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded"
             onClick={() => setOpenCreate(true)}
@@ -70,10 +111,18 @@ export default function Table({ data = [], isLoading = false }) {
           <table className="w-full text-sm">
             <thead className="text-xs text-gray-700 uppercase bg-gray-100">
               <tr>
-                <th scope="col" className="px-6 py-3">Sr.No.</th>
-                <th scope="col" className="px-6 py-3">Sequence</th>
-                <th scope="col" className="px-6 py-3">Remark</th>
-                <th scope="col" className="px-6 py-3">Action</th>
+                <th scope="col" className="px-6 py-3">
+                  Sr.No.
+                </th>
+                <th scope="col" className="px-6 py-3">
+                  Sequence
+                </th>
+                <th scope="col" className="px-6 py-3">
+                  Remark
+                </th>
+                <th scope="col" className="px-6 py-3">
+                  Action
+                </th>
               </tr>
             </thead>
             {isLoading ? (
