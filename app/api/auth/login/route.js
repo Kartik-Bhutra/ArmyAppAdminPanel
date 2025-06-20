@@ -12,8 +12,9 @@ export async function POST(req) {
     }
 
     const userData = userDoc.data();
-    const val = await argon2.verify(userData.passwordHash,password);
-    if (val) {
+    console.log()
+    const val = await argon2.verify(userData.password, password);
+    if (!val) {
       return NextResponse.json(
         { message: "Incorrect Password" },
         { status: 401 }

@@ -1,6 +1,5 @@
 import { motion } from "framer-motion";
 import ChevronIcon from "@/icons/ChevronIcon";
-import { decrypt } from "@/hooks/useDecrypt";
 import React from "react";
 
 function formatTimestamp(timestamp) {
@@ -17,25 +16,16 @@ function formatTimestamp(timestamp) {
 }
 
 export default function TableBody({ data, selectedRows, toggleRow }) {
-  const decryptPhoneNo = (phone_no, iv) => {
-    try {
-      return decrypt(phone_no, iv);
-    } catch (error) {
-      console.error("Decryption error:", error);
-      return "Error decrypting";
-    }
-  };
-
-  const onBlock = (phone_no, e) => {
+  const onBlock = (mobile, e) => {
     e.stopPropagation();
 
-    console.log("Blocking:", phone_no);
+    console.log("Blocking:", mobile);
   };
 
-  const onSafe = (phone_no, e) => {
+  const onSafe = (mobile, e) => {
     e.stopPropagation();
 
-    console.log("Marking as safe:", phone_no);
+    console.log("Marking as safe:", mobile);
   };
 
   return (
@@ -59,11 +49,11 @@ export default function TableBody({ data, selectedRows, toggleRow }) {
               </motion.div>
             </td>
             <td className="px-6 py-4 font-medium text-gray-900 text-center">
-              {item.phone_no}
+              {item.mobile}
             </td>
             <td className="px-6 py-4 text-center">
               <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded">
-                {console.log(item.by)}
+                {item.by.length}
               </span>
             </td>
             <td className="px-6 py-4">
@@ -71,7 +61,7 @@ export default function TableBody({ data, selectedRows, toggleRow }) {
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  onClick={(e) => onSafe(item.phone_no, e)}
+                  onClick={(e) => onSafe(item.mobile, e)}
                   className="w-full sm:w-auto px-3 py-1.5 rounded-lg bg-green-500 text-white hover:bg-green-600 transition-colors text-sm"
                 >
                   Safe
@@ -79,7 +69,7 @@ export default function TableBody({ data, selectedRows, toggleRow }) {
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  onClick={(e) => onBlock(item.phone_no, e)}
+                  onClick={(e) => onBlock(item.mobile, e)}
                   className="w-full sm:w-auto px-3 py-1.5 rounded-lg bg-red-500 text-white hover:bg-red-600 transition-colors text-sm"
                 >
                   Block
@@ -114,7 +104,7 @@ export default function TableBody({ data, selectedRows, toggleRow }) {
                             {reporter.name || "Anonymous"}
                           </p>
                           <p className="text-gray-500 text-sm">
-                            {decryptPhoneNo(reporter.phone_no, item.iv)}
+                            {reporter.mobile}
                           </p>
                           {reporter.reportedAt && (
                             <p className="text-gray-400 text-xs mt-1">

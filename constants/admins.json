@@ -1,0 +1,132 @@
+{
+  "admin": {
+    "password": "admin",
+    "role": false,
+    "mobile": "8107778231"
+  },
+  "owner": {
+    "password": "owner",
+    "role": true,
+    "mobile": "8107778231"
+  },
+  "userAlpha": {
+    "password": "XyZ!1234",
+    "mobile": "9876543210",
+    "role": true
+  },
+  "userBeta": {
+    "password": "Abc@5678",
+    "mobile": "8765432109",
+    "role": false
+  },
+  "userGamma": {
+    "password": "Qwe#9012",
+    "mobile": "7654321098",
+    "role": true
+  },
+  "userDelta": {
+    "password": "Zxc$3456",
+    "mobile": "6543210987",
+    "role": false
+  },
+  "userEpsilon": {
+    "password": "Poi%7890",
+    "mobile": "5432109876",
+    "role": true
+  },
+  "userZeta": {
+    "password": "Lkj&1234",
+    "mobile": "4321098765",
+    "role": false
+  },
+  "userEta": {
+    "password": "Mnb*5678",
+    "mobile": "3210987654",
+    "role": true
+  },
+  "userTheta": {
+    "password": "Vfr(9012",
+    "mobile": "2109876543",
+    "role": false
+  },
+  "userIota": {
+    "password": "Tgb)3456",
+    "mobile": "1098765432",
+    "role": true
+  },
+  "userKappa": {
+    "password": "Yhn_7890",
+    "mobile": "9087654321",
+    "role": false
+  },
+  "userLambda": {
+    "password": "Plo+1234",
+    "mobile": "8976543210",
+    "role": true
+  },
+  "userMu": {
+    "password": "Qaz=5678",
+    "mobile": "7865432109",
+    "role": false
+  },
+  "userNu": {
+    "password": "Wsx!4321",
+    "mobile": "6754321098",
+    "role": true
+  },
+  "userXi": {
+    "password": "Edc@8765",
+    "mobile": "5643210987",
+    "role": false
+  },
+  "userOmicron": {
+    "password": "Rfv#2109",
+    "mobile": "4532109876",
+    "role": true
+  },
+  "userPi": {
+    "password": "Tgb$6543",
+    "mobile": "3421098765",
+    "role": false
+  },
+  "userRho": {
+    "password": "Yhn%0987",
+    "mobile": "2310987654",
+    "role": true
+  },
+  "userSigma": {
+    "password": "Ujm^4321",
+    "mobile": "1209876543",
+    "role": false
+  },
+  "userTau": {
+    "password": "Ikm&8765",
+    "mobile": "9198765432",
+    "role": true
+  },
+  "userUpsilon": {
+    "password": "Olp*2109",
+    "mobile": "8187654321",
+    "role": false
+  },
+  "userPhi": {
+    "password": "Mko(6543",
+    "mobile": "7176543210",
+    "role": true
+  },
+  "userChi": {
+    "password": "Nji)0987",
+    "mobile": "6165432109",
+    "role": false
+  },
+  "userPsi": {
+    "password": "Bhu_4321",
+    "mobile": "5154321098",
+    "role": true
+  },
+  "userOmega": {
+    "password": "Vgy+8765",
+    "mobile": "4143210987",
+    "role": false
+  }
+}

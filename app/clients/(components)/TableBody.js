@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
-import { decrypt } from "@/hooks/useDecrypt";
 import { db } from "@/lib/firebaseConfig";
 import { deleteDoc, doc, serverTimestamp, updateDoc } from "firebase/firestore";
+import { gcm } from "@noble/ciphers/aes";
 
 function formatTimestamp(isoString) {
   if (!isoString) return "N/A";
@@ -20,8 +20,8 @@ export default function TableBody({ data, isApproved = false }) {
     try {
       return {
         ...item,
-        phoneNo: decrypt(item.phoneNo, item.iv),
-        UUID: decrypt(item.UUID, item.iv),
+        phoneNo: item.mobile,
+        UUID: item.UUID,
       };
     } catch (error) {
       console.error("Decryption error:", error);

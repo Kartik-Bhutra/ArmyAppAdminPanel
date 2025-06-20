@@ -1,19 +1,6 @@
-import crypto from "crypto";
-
-const algorithm = "aes-256-cbc";
-const key = process.env.NEXT_PUBLIC_ENCRYPTION_KEY;
-
-export function decrypt(encryptedData, iv) {
-  try {
-    const decipher = crypto.createDecipheriv(
-      algorithm,
-      Buffer.from(key),
-      Buffer.from(iv, "hex")
-    );
-    const decrypted = decipher.update(Buffer.from(encryptedData, "hex"));
-    return Buffer.concat([decrypted, decipher.final()]).toString();
-  } catch (error) {
-    console.error("Decryption error:", error);
-    return "Error decrypting";
-  }
-}
+import { gcm } from "@noble/ciphers/aes";
+import { Buffer } from "buffer";
+const iv64 = process.env.NEXT_PUBLIC_ENCRYPTION_IV;
+const key64 = process.env.NEXT_PUBLIC_ENCRYPTION_KEY;
+const key = Buffer.from(key64, "base64url");
+const iv = Buffer.from(iv64, "base64url");

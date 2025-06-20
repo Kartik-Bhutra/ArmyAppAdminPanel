@@ -1,24 +1,103 @@
-import Table from "@/app/blocked/(components)/Table";
-import Dashboard from "@/components/Dashboard";
-import { getAuthUser } from "@/utils/getAuthUser";
-import { redirect } from "next/navigation";
+"use client";
+import { db } from "@/lib/firebaseConfig";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useState, useEffect } from "react";
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  limit,
+  query,
+} from "firebase/firestore";
+import Table from "./(components)/Table";
+import Pagination from "@/components/Pagination";
+import Error from "@/components/Error";
+import NoData from "@/components/NoData";
 
-export default async function BlockedPage() {
-  let user;
+export default function BlockedPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const page = Number(searchParams.get("page") || "1");
 
-  try {
-    user = await getAuthUser();
-    if (!user) {
-      redirect("/login");
+  const [pageData, setPageData] = useState([]);
+  const [error, setError] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [lastPageNumber, setLastPageNumber] = useState(0);
+
+  const rowPerPage = 25;
+
+  useEffect(() => {
+    async function fetchData() {
+      if (page <= 0) {
+        router.push("/blocked?page=1");
+        return;
+      }
+
+      setIsLoading(true);
+
+      try {
+        const countRef = doc(db, "blocked", "metadata");
+        const countSnap = await getDoc(countRef);
+
+        if (countSnap.exists()) {
+          const countData = countSnap.data();
+          const totalCount = countData.reports;
+          const totalPages = Math.ceil(totalCount / rowPerPage);
+          setLastPageNumber(totalPages);
+
+          if (page > totalPages) {
+            router.push(`/blocked?page=${totalPages}`);
+            return;
+          }
+
+          const reportsRef = collection(db, "blocked");
+          const q = query(reportsRef, limit(page * rowPerPage));
+          const snapshot = await getDocs(q);
+
+          const slicedDocs = snapshot.docs.slice(
+            (page - 1) * rowPerPage,
+            page * rowPerPage
+          );
+
+          const formatted = slicedDocs.map((doc) => {
+            return {
+              id: doc.id,
+              ...doc.data(),
+            };
+          });
+
+          setPageData(formatted);
+        } else {
+          setLastPageNumber(0);
+          setPageData([]);
+        }
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setIsLoading(false);
+      }
     }
-  } catch (err) {
-    redirect("/login");
+
+    fetchData();
+  }, [page, router]);
+
+  if (error) {
+    return <Error message={error} />;
   }
+
+  if (!pageData.length && !isLoading) {
+    return <NoData />;
+  }
+
   return (
-    <Dashboard user={user}>
-      <main className="p-6">
-        <Table />
-      </main>
-    </Dashboard>
+    <div className="container">
+      <Table data={pageData} isLoading={isLoading} />
+      <Pagination
+        currentPage={page}
+        totalPages={lastPageNumber}
+        baseUrl="/blocked"
+      />
+    </div>
   );
 }
