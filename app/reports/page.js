@@ -44,37 +44,35 @@ export default function ReportsPage() {
           const countData = countSnap.data();
           const totalCount = countData.reports;
           const totalPages = Math.ceil(totalCount / rowPerPage);
-          setLastPageNumber(totalPages);
+          if (totalPages !== 0) {
+            setLastPageNumber(totalPages);
 
-          if (page > totalPages) {
-            router.push(`/reports?page=${totalPages}`);
-            return;
+            if (page > totalPages) {
+              router.push(`/reports?page=${totalPages}`);
+              return;
+            }
+            const reportsRef = collection(db, "reports");
+            const q = query(reportsRef, limit(page * rowPerPage));
+            const snapshot = await getDocs(q);
+
+            const slicedDocs = snapshot.docs.slice(
+              (page - 1) * rowPerPage,
+              page * rowPerPage
+            );
+
+            const formatted = slicedDocs.map((doc) => {
+              const data = doc.data();
+              return {
+                id: doc.id,
+                ...data,
+              };
+            });
+
+            setPageData(formatted);
+          } else {
+            setLastPageNumber(0);
+            setPageData([]);
           }
-          const reportsRef = collection(db, "reports");
-          const q = query(reportsRef, limit(page * rowPerPage));
-          const snapshot = await getDocs(q);
-
-          const slicedDocs = snapshot.docs.slice(
-            (page - 1) * rowPerPage,
-            page * rowPerPage
-          );
-
-          const formatted = slicedDocs.map(doc => {
-            const data = doc.data();
-            return {
-              id: doc.id,
-              ...data,
-              by: data.by?.map(reporter => ({
-                ...reporter,
-                reportedAt: reporter.reportedAt?.toDate() || null,
-              })),
-            };
-          });
-
-          setPageData(formatted);
-        } else {
-          setLastPageNumber(0);
-          setPageData([]);
         }
       } catch (err) {
         setError(err.message);

@@ -37,37 +37,39 @@ export default function ApprovedPage() {
         const docSnap = await getDoc(countRef);
         if (docSnap.exists()) {
           const data = docSnap.data();
-          const approvedCount = data.approved;
+          const approvedCount = data.authenticated;
           const totalPages = Math.ceil(approvedCount / rowPerPage);
-          setLastPageNumber(totalPages);
-          if (page > totalPages) {
-            router.push(`/clients/approved?page=${totalPages}`);
-            return;
+          if (totalPages !== 0) {
+            setLastPageNumber(totalPages);
+            if (page > totalPages) {
+              router.push(`/clients/approved?page=${totalPages}`);
+              return;
+            }
+            const clientRef = collection(db, "clients");
+            const q = query(
+              clientRef,
+              where("authenticated", "==", true),
+              orderBy("createdAt", "desc"),
+              limit(page * rowPerPage)
+            );
+            const snapshot = await getDocs(q);
+            const docs = snapshot.docs.slice(
+              (page - 1) * rowPerPage,
+              page * rowPerPage
+            );
+            const formattedDocs = docs.map((doc) => {
+              const d = doc.data();
+              return {
+                id: doc.id,
+                ...d,
+                createdAt: d.createdAt?.toDate().toISOString() || null,
+              };
+            });
+            setPageData(formattedDocs);
+          } else {
+            setLastPageNumber(0);
+            setPageData([]);
           }
-          const clientRef = collection(db, "clients");
-          const q = query(
-            clientRef,
-            where("authenticated", "==", true),
-            orderBy("createdAt", "desc"),
-            limit(page * rowPerPage)
-          );
-          const snapshot = await getDocs(q);
-          const docs = snapshot.docs.slice(
-            (page - 1) * rowPerPage,
-            page * rowPerPage
-          );
-          const formattedDocs = docs.map((doc) => {
-            const d = doc.data();
-            return {
-              id: doc.id,
-              ...d,
-              createdAt: d.createdAt?.toDate().toISOString() || null,
-            };
-          });
-          setPageData(formattedDocs);
-        } else {
-          setLastPageNumber(0);
-          setPageData([]);
         }
       } catch (err) {
         setError(err.message);

@@ -2,7 +2,14 @@
 import { motion } from "framer-motion";
 import ChevronIcon from "@/icons/ChevronIcon";
 import React from "react";
-import { deleteDoc, doc, setDoc, serverTimestamp } from "firebase/firestore";
+import {
+  deleteDoc,
+  doc,
+  setDoc,
+  serverTimestamp,
+  updateDoc,
+  increment,
+} from "firebase/firestore";
 import { db } from "@/lib/firebaseConfig";
 
 function formatTimestamp(timestamp) {
@@ -19,29 +26,53 @@ function formatTimestamp(timestamp) {
 }
 
 export default function TableBody({ data, selectedRows, toggleRow }) {
-  const onBlock = async (id, e) => {
+  const onBlock = async (item, e) => {
     e.stopPropagation();
     try {
-      const blockedRef = doc(db, "blocked", id.mobile);
-      await setDoc(blockedRef, {
-        createdAt: serverTimestamp(),
-      });
+      const blockedRef = doc(db, "blocked", "numbers");
+      const blockedMetaRef = doc(db, "blocked", "metadata");
+      const reportsMetaRef = doc(db, "reports", "metadata");
+      const reportRef = doc(db, "reports", item.id);
+      await Promise.all([
+        updateDoc(blockedRef, {
+          [item.mobile]: {
+            createdAt: serverTimestamp(),
+            remark: `reported by ${item.by.length}`,
+          },
+        }),
+        deleteDoc(reportRef),
+        updateDoc(blockedMetaRef, {
+          total: increment(1),
+          updatedAt: serverTimestamp(),
+        }),
+        updateDoc(reportsMetaRef, {
+          requests: increment(-1),
+          updatedAt: serverTimestamp(),
+        }),
+      ]);
 
-      const reportRef = doc(db, "reports", id.id);
-      await deleteDoc(reportRef);
-      console.log(`Blocked and removed report: ${id.mobile}`);
+      console.log(`Blocked and removed report: ${item.mobile}`);
       window.location.reload();
     } catch (err) {
       console.error("Error blocking:", err);
     }
   };
 
-  const onSafe = async (mobile, e) => {
+  const onSafe = async (id, e) => {
     e.stopPropagation();
     try {
-      const reportRef = doc(db, "reports", mobile);
-      await deleteDoc(reportRef);
-      console.log(`Marked as safe and deleted report: ${mobile}`);
+      const reportRef = doc(db, "reports", id);
+      const reportsMetaRef = doc(db, "reports", "metadata");
+
+      await Promise.all([
+        deleteDoc(reportRef),
+        updateDoc(reportsMetaRef, {
+          reports: increment(-1),
+          updatedAt: serverTimestamp(),
+        }),
+      ]);
+
+      console.log(`Marked as safe and deleted report`);
       window.location.reload();
     } catch (err) {
       console.error("Error deleting report:", err);

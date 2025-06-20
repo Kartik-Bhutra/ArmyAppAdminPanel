@@ -1,39 +1,23 @@
 import { db, admin } from "@/lib/firebaseAdmin";
 import blocked from "@/constants/blocked.json";
-import { gcm } from "@noble/ciphers/aes";
-import { utf8ToBytes } from "@noble/ciphers/utils";
-import { Buffer } from "buffer";
 import { NextResponse } from "next/server";
 
 export async function GET() {
   try {
-    const iv64 = process.env.ENCRYPTION_IV;
-    const key64 = process.env.ENCRYPTION_KEY;
-
-    if (!iv64 || !key64) {
-      return NextResponse.json(
-        { error: "Missing ENCRYPTION_IV or ENCRYPTION_KEY" },
-        { status: 500 }
-      );
-    }
-
-    const key = Buffer.from(key64, "base64url");
-    const iv = Buffer.from(iv64, "base64url");
     const batch = db.batch();
-
+    const Obj = {};
     const blockedNumbers = Object.keys(blocked);
-
     blockedNumbers.forEach((number) => {
-      const aes = gcm(key, iv);
-      const encrypted = aes.encrypt(utf8ToBytes(number));
-      const encryptedId = Buffer.from(encrypted).toString("base64url");
-
-      const docRef = db.collection("blocked").doc(encryptedId);
-      batch.set(docRef, {
-        createdAt: admin.firestore.FieldValue.serverTimestamp(),
-      });
+      Obj[`+91${number}`] = {
+        createdAt: new Date(),
+        remark: "number from India",
+      };
     });
-
+    const docRef = db.collection("blocked").doc("numbers");
+    batch.set(docRef, {
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      ...Obj,
+    });
     const metadataRef = db.collection("blocked").doc("metadata");
     batch.set(metadataRef, {
       total: blockedNumbers.length,

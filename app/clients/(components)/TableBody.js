@@ -1,7 +1,12 @@
 import { motion } from "framer-motion";
 import { db } from "@/lib/firebaseConfig";
-import { deleteDoc, doc, serverTimestamp, updateDoc } from "firebase/firestore";
-import { gcm } from "@noble/ciphers/aes";
+import {
+  deleteDoc,
+  doc,
+  increment,
+  serverTimestamp,
+  updateDoc,
+} from "firebase/firestore";
 
 function formatTimestamp(isoString) {
   if (!isoString) return "N/A";
@@ -16,24 +21,17 @@ function formatTimestamp(isoString) {
 }
 
 export default function TableBody({ data, isApproved = false }) {
-  const decryptData = (item) => {
-    try {
-      return {
-        ...item,
-        phoneNo: item.mobile,
-        UUID: item.UUID,
-      };
-    } catch (error) {
-      console.error("Decryption error:", error);
-      return item;
-    }
-  };
-
-  const decryptedData = data?.map(decryptData) || [];
-
   const onRemove = async (docId) => {
     try {
-      await deleteDoc(doc(db, "clients", docId));
+      const metaRef = doc(db, "clients", "metadata");
+      await Promise.all([
+        deleteDoc(doc(db, "clients", docId)),
+        updateDoc(metaRef, {
+          [isApproved ? "authenticated" : "requests"]: increment(-1),
+          updatedAt: serverTimestamp(),
+        }),
+      ]);
+
       window.location.reload();
     } catch (error) {
       console.error("Failed to delete document:", error);
@@ -42,10 +40,21 @@ export default function TableBody({ data, isApproved = false }) {
 
   const onApprove = async (docId) => {
     try {
-      await updateDoc(doc(db, "clients", docId), {
-        authenticated: true,
-        createdAt: serverTimestamp(),
-      });
+      const clientRef = doc(db, "clients", docId);
+      const metaRef = doc(db, "clients", "metadata");
+
+      await Promise.all([
+        updateDoc(clientRef, {
+          authenticated: true,
+          createdAt: serverTimestamp(),
+        }),
+        updateDoc(metaRef, {
+          authenticated: increment(1),
+          requests: increment(-1),
+          updatedAt: serverTimestamp(),
+        }),
+      ]);
+
       window.location.reload();
     } catch (error) {
       console.error("Failed to approve client:", error);
@@ -54,7 +63,7 @@ export default function TableBody({ data, isApproved = false }) {
 
   return (
     <tbody className="divide-y divide-gray-200">
-      {decryptedData.map((item, key) => (
+      {data.map((item, key) => (
         <motion.tr
           key={item.id}
           initial={{ opacity: 0, y: 20 }}
@@ -64,7 +73,7 @@ export default function TableBody({ data, isApproved = false }) {
         >
           <td className="px-6 py-4 text-center">{item.name}</td>
           <td className="px-6 py-4 text-gray-600 sm:table-cell text-center">
-            {item.phoneNo}
+            {item.mobile}
           </td>
           <td className="px-6 py-4 text-gray-600 md:table-cell text-center">
             {item.UUID}

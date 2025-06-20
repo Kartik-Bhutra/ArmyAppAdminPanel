@@ -1,15 +1,8 @@
 "use client";
 import { db } from "@/lib/firebaseConfig";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState, useEffect } from "react";
-import {
-  collection,
-  doc,
-  getDoc,
-  getDocs,
-  limit,
-  query,
-} from "firebase/firestore";
+import { useEffect, useState } from "react";
+import { doc, getDoc } from "firebase/firestore";
 import Table from "./(components)/Table";
 import Pagination from "@/components/Pagination";
 import Error from "@/components/Error";
@@ -18,7 +11,6 @@ import NoData from "@/components/NoData";
 export default function BlockedPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const page = Number(searchParams.get("page") || "1");
 
   const [pageData, setPageData] = useState([]);
   const [error, setError] = useState(null);
@@ -26,6 +18,7 @@ export default function BlockedPage() {
   const [lastPageNumber, setLastPageNumber] = useState(0);
 
   const rowPerPage = 25;
+  const page = Number(searchParams.get("page") || "1");
 
   useEffect(() => {
     async function fetchData() {
@@ -37,40 +30,37 @@ export default function BlockedPage() {
       setIsLoading(true);
 
       try {
-        const countRef = doc(db, "blocked", "metadata");
-        const countSnap = await getDoc(countRef);
+        const docRef = doc(db, "blocked", "numbers");
+        const docSnap = await getDoc(docRef);
 
-        if (countSnap.exists()) {
-          const countData = countSnap.data();
-          const totalCount = countData.reports;
-          const totalPages = Math.ceil(totalCount / rowPerPage);
-          setLastPageNumber(totalPages);
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          const entries = Object.entries(data);
+          const totalPages = Math.ceil(entries.length / rowPerPage);
 
-          if (page > totalPages) {
-            router.push(`/blocked?page=${totalPages}`);
-            return;
+          if (totalPages !== 0) {
+            setLastPageNumber(totalPages);
+
+            if (page > totalPages) {
+              router.push(`/blocked?page=${totalPages}`);
+              return;
+            }
+
+            const sliced = entries
+              .slice((page - 1) * rowPerPage, page * rowPerPage)
+              .map(([mobile, value]) => ({
+                mobile,
+                ...value,
+              }));
+
+            setPageData(sliced);
+          } else {
+            setPageData([]);
+            setLastPageNumber(0);
           }
-
-          const reportsRef = collection(db, "blocked");
-          const q = query(reportsRef, limit(page * rowPerPage));
-          const snapshot = await getDocs(q);
-
-          const slicedDocs = snapshot.docs.slice(
-            (page - 1) * rowPerPage,
-            page * rowPerPage
-          );
-
-          const formatted = slicedDocs.map((doc) => {
-            return {
-              id: doc.id,
-              ...doc.data(),
-            };
-          });
-
-          setPageData(formatted);
         } else {
-          setLastPageNumber(0);
           setPageData([]);
+          setLastPageNumber(0);
         }
       } catch (err) {
         setError(err.message);
@@ -82,13 +72,8 @@ export default function BlockedPage() {
     fetchData();
   }, [page, router]);
 
-  if (error) {
-    return <Error message={error} />;
-  }
-
-  if (!pageData.length && !isLoading) {
-    return <NoData />;
-  }
+  if (error) return <Error message={error} />;
+  if (!pageData.length && !isLoading) return <NoData />;
 
   return (
     <div className="container">

@@ -39,35 +39,37 @@ export default function RequestPage() {
           const data = docSnap.data();
           const unapprovedCount = data.requests;
           const totalPages = Math.ceil(unapprovedCount / rowPerPage);
-          setLastPageNumber(totalPages);
-          if (page > totalPages) {
-            router.push(`/clients/requests?page=${totalPages}`);
-            return;
+          if (totalPages !== 0) {
+            setLastPageNumber(totalPages);
+            if (page > totalPages) {
+              router.push(`/clients/requests?page=${totalPages}`);
+              return;
+            }
+            const clientRef = collection(db, "clients");
+            const q = query(
+              clientRef,
+              where("authenticated", "==", false),
+              orderBy("createdAt", "desc"),
+              limit(page * rowPerPage)
+            );
+            const snapshot = await getDocs(q);
+            const docs = snapshot.docs.slice(
+              (page - 1) * rowPerPage,
+              page * rowPerPage
+            );
+            const formattedDocs = docs.map((doc) => {
+              const d = doc.data();
+              return {
+                id: doc.id,
+                ...d,
+                createdAt: d.createdAt?.toDate().toISOString() || null,
+              };
+            });
+            setPageData(formattedDocs);
+          } else {
+            setLastPageNumber(0);
+            setPageData([]);
           }
-          const clientRef = collection(db, "clients");
-          const q = query(
-            clientRef,
-            where("authenticated", "==", false),
-            orderBy("createdAt", "desc"),
-            limit(page * rowPerPage)
-          );
-          const snapshot = await getDocs(q);
-          const docs = snapshot.docs.slice(
-            (page - 1) * rowPerPage,
-            page * rowPerPage
-          );
-          const formattedDocs = docs.map((doc) => {
-            const d = doc.data();
-            return {
-              id: doc.id,
-              ...d,
-              createdAt: d.createdAt?.toDate().toISOString() || null,
-            };
-          });
-          setPageData(formattedDocs);
-        } else {
-          setLastPageNumber(0);
-          setPageData([]);
         }
       } catch (err) {
         setError(err.message);

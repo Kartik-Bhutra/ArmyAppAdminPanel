@@ -12,6 +12,9 @@ import {
   setDoc,
   deleteDoc,
   serverTimestamp,
+  deleteField,
+  increment,
+  updateDoc,
 } from "firebase/firestore";
 import { db } from "@/lib/firebaseConfig";
 
@@ -26,15 +29,27 @@ export default function Table({ data = [], isLoading = false }) {
   const onCreate = async () => {
     const fullNumber = `${code}${seq}`;
 
-    if (!seq) {
+    if (!seq || !remark) {
       alert("Please fill out both sequence and remark.");
       return;
     }
 
     try {
-      await setDoc(doc(collection(db, "blocked"), fullNumber), {
-        createdAt: serverTimestamp(),
-      });
+      const blockedRef = doc(db, "blocked", "numbers");
+      const metaRef = doc(db, "blocked", "metadata");
+
+      await Promise.all([
+        updateDoc(blockedRef, {
+          [fullNumber]: {
+            createdAt: serverTimestamp(),
+            remark,
+          },
+        }),
+        updateDoc(metaRef, {
+          total: increment(1),
+          updatedAt: serverTimestamp(),
+        }),
+      ]);
 
       setOpenCreate(false);
       setSeq("");
@@ -50,7 +65,19 @@ export default function Table({ data = [], isLoading = false }) {
     if (!deleteId) return;
 
     try {
-      await deleteDoc(doc(db, "blocked", deleteId));
+      const blockedRef = doc(db, "blocked", "numbers");
+      const metaRef = doc(db, "blocked", "metadata");
+
+      await Promise.all([
+        updateDoc(blockedRef, {
+          [deleteId]: deleteField(),
+        }),
+        updateDoc(metaRef, {
+          total: increment(-1),
+          updatedAt: serverTimestamp(),
+        }),
+      ]);
+
       setOpenDelete(false);
       setDeleteId(null);
       window.location.reload();
@@ -112,7 +139,7 @@ export default function Table({ data = [], isLoading = false }) {
             <thead className="text-xs text-gray-700 uppercase bg-gray-100">
               <tr>
                 <th scope="col" className="px-6 py-3">
-                  Sr.No.
+                  Created At
                 </th>
                 <th scope="col" className="px-6 py-3">
                   Sequence
