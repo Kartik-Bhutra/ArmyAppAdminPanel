@@ -12,7 +12,7 @@ export async function POST(req) {
     }
 
     const userData = userDoc.data();
-    console.log()
+    console.log();
     const val = await argon2.verify(userData.password, password);
     if (!val) {
       return NextResponse.json(
@@ -32,7 +32,12 @@ export async function POST(req) {
     const customToken = await auth.createCustomToken(userId, {
       role: userData.role,
     });
-
+    admin
+      .auth()
+      .setCustomUserClaims(userId, { admin: true })
+      .then(() => {
+        console.log("Custom claim set for admin user");
+      });
     return NextResponse.json({
       token: customToken,
     });

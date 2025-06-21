@@ -30,7 +30,7 @@ export default function BlockedPage() {
       setIsLoading(true);
 
       try {
-        const docRef = doc(db, "blocked", "numbers");
+        const docRef = doc(db, "BlockedNumbers", "numbers");
         const docSnap = await getDoc(docRef);
 
         if (docSnap.exists()) {

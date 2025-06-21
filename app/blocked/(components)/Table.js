@@ -35,8 +35,8 @@ export default function Table({ data = [], isLoading = false }) {
     }
 
     try {
-      const blockedRef = doc(db, "blocked", "numbers");
-      const metaRef = doc(db, "blocked", "metadata");
+      const blockedRef = doc(db, "BlockedNumbers", "numbers");
+      const metaRef = doc(db, "BlockedNumbers", "metadata");
 
       await Promise.all([
         updateDoc(blockedRef, {
@@ -65,8 +65,8 @@ export default function Table({ data = [], isLoading = false }) {
     if (!deleteId) return;
 
     try {
-      const blockedRef = doc(db, "blocked", "numbers");
-      const metaRef = doc(db, "blocked", "metadata");
+      const blockedRef = doc(db, "BlockedNumbers", "numbers");
+      const metaRef = doc(db, "BlockedNumbers", "metadata");
 
       await Promise.all([
         updateDoc(blockedRef, {

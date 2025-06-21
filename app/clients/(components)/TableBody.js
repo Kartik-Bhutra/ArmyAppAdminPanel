@@ -23,9 +23,9 @@ function formatTimestamp(isoString) {
 export default function TableBody({ data, isApproved = false }) {
   const onRemove = async (docId) => {
     try {
-      const metaRef = doc(db, "clients", "metadata");
+      const metaRef = doc(db, "requests_authentication", "metadata");
       await Promise.all([
-        deleteDoc(doc(db, "clients", docId)),
+        deleteDoc(doc(db, "requests_authentication", docId)),
         updateDoc(metaRef, {
           [isApproved ? "authenticated" : "requests"]: increment(-1),
           updatedAt: serverTimestamp(),
@@ -40,8 +40,8 @@ export default function TableBody({ data, isApproved = false }) {
 
   const onApprove = async (docId) => {
     try {
-      const clientRef = doc(db, "clients", docId);
-      const metaRef = doc(db, "clients", "metadata");
+      const clientRef = doc(db, "requests_authentication", docId);
+      const metaRef = doc(db, "requests_authentication", "metadata");
 
       await Promise.all([
         updateDoc(clientRef, {

@@ -13,12 +13,11 @@ export async function GET() {
         remark: "number from India",
       };
     });
-    const docRef = db.collection("blocked").doc("numbers");
+    const docRef = db.collection("BlockedNumbers").doc("numbers");
     batch.set(docRef, {
-      createdAt: admin.firestore.FieldValue.serverTimestamp(),
       ...Obj,
     });
-    const metadataRef = db.collection("blocked").doc("metadata");
+    const metadataRef = db.collection("BlockedNumbers").doc("metadata");
     batch.set(metadataRef, {
       total: blockedNumbers.length,
       updatedAt: admin.firestore.FieldValue.serverTimestamp(),

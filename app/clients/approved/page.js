@@ -33,7 +33,7 @@ export default function ApprovedPage() {
       }
       setIsLoading(true);
       try {
-        const countRef = doc(db, "clients", "metadata");
+        const countRef = doc(db, "requests_authentication", "metadata");
         const docSnap = await getDoc(countRef);
         if (docSnap.exists()) {
           const data = docSnap.data();
@@ -45,7 +45,7 @@ export default function ApprovedPage() {
               router.push(`/clients/approved?page=${totalPages}`);
               return;
             }
-            const clientRef = collection(db, "clients");
+            const clientRef = collection(db, "requests_authentication");
             const q = query(
               clientRef,
               where("authenticated", "==", true),
@@ -80,9 +80,7 @@ export default function ApprovedPage() {
     fetchPageData();
   }, [page, router]);
   if (error) {
-    return (
-      <Error message="Failed to load approved clients. Please try again later." />
-    );
+    return <Error message={error} />;
   }
   if (!pageData.length && !isLoading) {
     return <NoData />;

@@ -85,7 +85,7 @@ export default function ReportsPage() {
   }, [page, router]);
 
   if (error) {
-    return <Error message="Failed to load reports. Please try again later." />;
+    return <Error message={error} />;
   }
 
   if (!pageData.length && !isLoading) {

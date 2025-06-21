@@ -13,7 +13,7 @@ export async function GET() {
     for (const [deviceId, { name, mobile, authenticated }] of entries) {
       if (authenticated === true) authenticatedCount++;
 
-      const docRef = db.collection("clients").doc(deviceId);
+      const docRef = db.collection("requests_authentication").doc(deviceId);
 
       batch.set(docRef, {
         createdAt: admin.firestore.FieldValue.serverTimestamp(),
@@ -24,7 +24,7 @@ export async function GET() {
       });
     }
 
-    const metaRef = db.collection("clients").doc("metadata");
+    const metaRef = db.collection("requests_authentication").doc("metadata");
     batch.set(metaRef, {
       authenticated: authenticatedCount,
       requests: entries.length - authenticatedCount,

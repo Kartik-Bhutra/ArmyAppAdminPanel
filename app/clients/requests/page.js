@@ -33,7 +33,7 @@ export default function RequestPage() {
       }
       setIsLoading(true);
       try {
-        const countRef = doc(db, "clients", "metadata");
+        const countRef = doc(db, "requests_authentication", "metadata");
         const docSnap = await getDoc(countRef);
         if (docSnap.exists()) {
           const data = docSnap.data();
@@ -45,7 +45,7 @@ export default function RequestPage() {
               router.push(`/clients/requests?page=${totalPages}`);
               return;
             }
-            const clientRef = collection(db, "clients");
+            const clientRef = collection(db, "requests_authentication");
             const q = query(
               clientRef,
               where("authenticated", "==", false),
@@ -81,7 +81,7 @@ export default function RequestPage() {
   }, [page, router]);
   if (error) {
     return (
-      <Error message="Failed to load client requests. Please try again later." />
+      <Error message={error} />
     );
   }
   if (!pageData.length && !isLoading) {
